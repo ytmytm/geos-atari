@@ -3,19 +3,20 @@
 ;
 ; Atari keyboard driver, Maciej Witkowiak, 2022
 
-.warning "keyboard2-atari unchecked"
-
 .include "const.inc"
 .include "geossym.inc"
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
+.include "atari.inc"
 
 .global KbdDecodeTab
 .global KbdDecodeTab_SHIFT
 .global KbdDecodeTab_CTRL
 
 .segment "keyboard2"
+
+.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "keyboard maps not in bank0"
 
 ;	.byte "L", "J", ";", $03, $04, "K", "+", "*"
 ;	.byte "O", $09, "P", "U", return_c, "I", "-", "="

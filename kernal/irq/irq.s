@@ -17,6 +17,7 @@
 .import KbdQueFlag
 .import alarmWarnFlag
 .import tempIRQAcc
+.import interrupt_lock
 
 .import CallRoutine
 
@@ -69,7 +70,11 @@ _BRKHandler:					; in principle this is Panic
 
 	; main interrupt called on every frame
 _NMIHandler:
-	pha
+	sta ANTIC_NMIRES			; ack interrupt
+	bit interrupt_lock
+	beq :+
+	rti
+:	pha
 	txa
 	pha
 	tya
@@ -119,5 +124,4 @@ _NMIHandler:
 	pla
 	tax
 	pla
-	sta ANTIC_NMIRES			; ack interrupt
 	rti

@@ -1,5 +1,6 @@
 
 ATARI_EXPBASE	= $4000			; base address for banked memory
+ATARI_EXP_WINDOW= $4000			; banked memory window size
 
 ; defines copied from LUnix Next Generation
 

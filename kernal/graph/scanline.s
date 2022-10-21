@@ -9,9 +9,13 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
+.include "atari.inc"
 
+.import atari_banks
+.import interrupt_lock
 ;XXX.import Panic
+
+.warning "scanline.s - missing Panic call for invalid dispBufferOn"
 
 .global _GetScanLine
 
@@ -27,12 +31,17 @@
 ; Destroyed: a
 ;---------------------------------------------------------------
 _GetScanLine:
+	PushB PIA_PORTB
+	LoadB interrupt_lock, $ff
+	MoveB atari_banks, PIA_PORTB
 	lda LineTabL, x
 	sta r5L
 	sta r6L
 	lda LineTabH, x
 	sta r5H
 	sta r6H
+	PopB PIA_PORTB
+	LoadB interrupt_lock, 0
 
 	bbrf 7, dispBufferOn, @4	; !ST_WR_FORE
 	bvs @3				; ST_WR_FORE | ST_WR_BACK
@@ -53,6 +62,10 @@ _GetScanLine:
 	;bra @1
 	;XXX jmp Panic
 	bra @1 ; return but that should not happen
+
+	.segment "scanline"
+
+.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "scanline tables not in bank0"
 
 LineTabL:
 	.repeat 200, line

@@ -18,6 +18,9 @@
 
 .global _DoKeyboardScan
 
+.import atari_banks
+.import interrupt_lock
+
 .import KbdDecodeTab
 .import KbdDecodeTab_SHIFT
 .import KbdDecodeTab_CTRL
@@ -33,6 +36,9 @@ _DoKeyboardScan:
 	tax
 	and #%11000000		; top 2 bits, 0=pressed
 	sta r1H
+	ldy PIA_PORTB
+	LoadB interrupt_lock, $ff
+	MoveB atari_banks+0, PIA_PORTB	; keyboard maps are in bank 0
 	txa
 	and #%00111111
 	tax
@@ -44,8 +50,10 @@ _DoKeyboardScan:
 @shift:	lda KbdDecodeTab_SHIFT, x
 	bra :+
 @ctrl:	lda KbdDecodeTab_CTRL, x
-:	jsr KbdScanHelp2
-	rts
+:	sty PIA_PORTB			; restore memory config
+	ldy #0
+	sty interrupt_lock
+	jmp KbdScanHelp2
 
 ; KbdNextKey, KbdQueFlag, KBDbncTab, KBDmultTab = free space for variables
 

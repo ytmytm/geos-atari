@@ -21,12 +21,14 @@
 .global DetectRamExp
 .global atari_banks
 .global atari_nbanks
+.global interrupt_lock
 
 ; stored banks
 .segment "ramexp2"
 
-atari_nbanks:	.res 1
-atari_banks:	.res 64
+atari_nbanks:	.res 1, 0
+atari_banks:	.res 64, 0
+interrupt_lock:	.res 0, 0
 
 ; XXX todo: setup RAM drive (directory 1st block+header+BAM according to mem size)
 

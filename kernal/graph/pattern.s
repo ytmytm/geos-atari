@@ -8,11 +8,17 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
+.include "atari.inc"
 
 .import PatternTab
+.import atari_banks
+.import interrupt_lock
 
 .global _SetPattern
+
+.segment "ramexp2"
+
+curPatternBuf:	.res 8, 0
 
 .segment "graph2l2"
 
@@ -27,14 +33,25 @@ _SetPattern:
 	asl
 	asl
 	asl
-.ifdef wheels
-	.assert <PatternTab = 0, error, "PatternTab must be page-aligned!"
-.else
 	adc #<PatternTab
-.endif
 	sta curPattern
 	lda #0
 	adc #>PatternTab
 	sta curPattern+1
+	tya
+	pha
+	PushB PIA_PORTB
+	LoadB interrupt_lock, $ff
+	MoveB atari_banks+0, PIA_PORTB	; patterns are in bank 0
+	ldy #0
+:	lda (curPattern),y
+	sta curPatternBuf,y
+	iny
+	cpy #8
+	bne :-
+	PopB PIA_PORTB
+	LoadB interrupt_lock, 0
+	pla
+	tay
+	LoadW curPattern, curPatternBuf
 	rts
-

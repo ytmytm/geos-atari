@@ -3,9 +3,13 @@
 ;
 ; Patterns
 
+.include "inc/atari.inc"
+
 .global PatternTab
 
 .segment "patterns"
+
+.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "paterns not in bank0"
 
 ; There are 34 patterns. Only the first 32 are
 ; accessible from geoPaint.

@@ -9,9 +9,6 @@
 .include "config.inc"
 .include "kernal.inc"
 
-.warning "mainloop1.s - doupdatetime commented out"
-
-;XXX.import _DoUpdateTime
 .import _ExecuteProcesses
 .import _MainLoop2
 .import _DoCheckButtons
@@ -28,7 +25,6 @@ _MainLoop:
 	jsr _DoCheckButtons
 	jsr _ExecuteProcesses
 	jsr _DoCheckDelays
-;XXX	jsr _DoUpdateTime
 	lda appMain+0
 	ldx appMain+1
 _MNLP:	jsr CallRoutine

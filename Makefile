@@ -270,7 +270,6 @@ KERNAL_SOURCES = \
 	kernal/serial/serial2.s \
 	kernal/sprites/sprites.s \
 	kernal/time/time1.s \
-	kernal/time/time2.s \
 	kernal/tobasic/tobasic2.s \
 	kernal/vars/vars.s
 endif

@@ -1,62 +1,65 @@
 ; GEOS KERNAL by Berkeley Softworks
 ; reverse engineered by Maciej Witkowiak, Michael Steil
 ;
-; C64/CIA clock driver
 
 .include "const.inc"
 .include "geossym.inc"
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
 
-.import pingTab
-.import pingTabEnd
 .import alarmWarnFlag
 .import dateCopy
 
 .global _DoUpdateTime
+.global jiffyCounter
 
-.warning "time1.s - This doesn't work for Atari"
+.segment "ramexp2"
+; increased on VBLANK interrupt
+jiffyCounter:	.res 1, 0
 
 .segment "time1"
 
+; called from mainloop
 _DoUpdateTime:
-	sei
-	START_IO_X
-	lda cia1base+15
-	and #%01111111
-	sta cia1base+15
+	lda jiffyCounter			; at least one second passed?
+	cmp #50					; XXX this depends on PAL/NTSC!
+	bcs :+
+	rts
+
+:	ldx #0
+	subv 50					; XXX this depends on PAL/NTSC
+	sta jiffyCounter
+	bpl :+
+	stx jiffyCounter			; negative? we might lose a second here
+:	inc seconds				; next second
+	lda seconds
+	cmp #60
+	bcc :+
+	stx seconds				; next minute
+	inc minutes
+	lda minutes
+	cmp #60
+	bcc :+
+	stx minutes				; next hour
+	inc hour
 	lda hour
-	cmp #12
-	bmi @1
-	bbsf 7, cia1base+11, @1
-	jsr DateUpdate
-@1:	lda cia1base+11
-	and #%00011111
-	cmp #$12
-	bne @2
-	lda #0
-@2:	bbrf 7, cia1base+11, @3
-	sed
-	addv $12
-	cld
-@3:	jsr ConvertBCD
-	sta hour
-	lda cia1base+10
-	jsr ConvertBCD
-	sta minutes
-	lda cia1base+9
-	jsr ConvertBCD
-	sta seconds
-	lda cia1base+8
-	ldy #2
-@4:	lda year,y
+	cmp #24
+	bcc :+
+	stx hour
+	jsr DateUpdate				; next day
+:	rts 
+
+.if 0=1
+	ldy #2					; this is done for RBoot, but does it even make sense on Atari?
+:	lda year,y
 	sta dateCopy,y
 	dey
-	bpl @4
-	MoveB cia1base+13, r1L
-	END_IO_X
+	bpl :-
+.endif
+
+.if 0=1
+	; does this even work? how that alarm is enabled?
 	bbrf 7, alarmSetFlag, @5
 	and #ALARMMASK
 	beq @6
@@ -68,8 +71,8 @@ _DoUpdateTime:
 	jmp (alarmTmtVector)
 @5:	bbrf 6, alarmSetFlag, @6
 	jsr DoClockAlarm
-@6:	cli
-	rts
+@6:	rts
+.endif
 
 DateUpdate:
 	jsr CheckMonth
@@ -124,50 +127,22 @@ daysTab:
 	.byte 31, 28, 31, 30, 31, 30
 	.byte 31, 31, 30, 31, 30, 31
 
-ConvertBCD:
-	pha
-.ifndef wheels_size_and_speed ; no-op
-	and #%11110000
-.endif
-	lsr
-	lsr
-	lsr
-	lsr
-	tay
-	pla
-	and #%00001111
-	clc
-@1:	dey
-	bmi @2
-	adc #10
-	bne @1
-@2:	rts
-
+.if 0=1
 DoClockAlarm:
 	lda alarmWarnFlag
 	bne @3
-.ifdef bsw128
-	ldy config
-	LoadB config, CIOIN
-.endif
-	START_IO_Y
-	ldx #<(pingTabEnd - pingTab - 1)
-@1:	lda pingTab,x
-	sta sidbase,x
-	dex
-	bpl @1
+.warning "time1.s - alarm ping sound not implemented"
+	; XXX ping sound using POKEY goes here
 	ldx #$21
 	lda alarmSetFlag
 	and #%00111111
 	bne @2
 	tax
-@2:	stx sidbase+4
-.ifdef bsw128
-	sty config
-.endif
+@2:	;stx sidbase+4 ???
 	END_IO_Y
 	lda #$1e
 	sta alarmWarnFlag
 	dec alarmSetFlag
 @3:	rts
+.endif
 

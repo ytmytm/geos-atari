@@ -18,6 +18,8 @@
 .import alarmWarnFlag
 .import tempIRQAcc
 .import interrupt_lock
+.import jiffyCounter
+.import _DoUpdateTime
 
 .import CallRoutine
 
@@ -71,6 +73,7 @@ _BRKHandler:					; in principle this is Panic
 	; main interrupt called on every frame
 _NMIHandler:
 	sta ANTIC_NMIRES			; ack interrupt
+	inc jiffyCounter			; time update
 	bit interrupt_lock
 	beq :+
 	rti
@@ -107,6 +110,7 @@ _NMIHandler:
 :	lda intTopVector
 	ldx intTopVector+1
 	jsr CallRoutine
+	jsr _DoUpdateTime			; here, not in mainloop2.s
 	lda intBotVector
 	ldx intBotVector+1
 	jsr CallRoutine

@@ -8,20 +8,15 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
+.include "atari.inc"
+
+.warning "init2.s needs EnterDesktop"
 
 .import InitMsePic
-.import _EnterDeskTop
+;.import _EnterDeskTop
 .import _InitMachine
-.import UNK_6
-.import _SetMsePic
 
-.import i_FillRam
-.import EnterDeskTop
-.ifdef wheels
-.import i_ColorRectangle
-.import InitMachine
-.endif
+;.import EnterDeskTop
 
 .global _FirstInit
 
@@ -35,88 +30,27 @@
 ; Pass:      nothing
 ; Destroyed: a, y, r0 - r2l
 ;---------------------------------------------------------------
+.assert * < $c000, error, "_FirstInit calls InitMachine to enable ROM, can't be under ROM"
 _FirstInit:
 	sei
 	cld
-.ifdef bsw128
-	LoadB screencolors, $BF
-	sta @1
-	LoadB scr80polar, $40
-	LoadB scr80colors, $E0
-.endif
-.ifdef wheels
-	jsr InitMachine
-.else
 	jsr _InitMachine
-.endif
-	LoadW EnterDeskTop+1, _EnterDeskTop
+;	LoadW EnterDeskTop+1, _EnterDeskTop
 	LoadB maxMouseSpeed, iniMaxMouseSpeed
-.ifdef wheels_size_and_speed
-	.assert iniMouseAccel = iniMaxMouseSpeed, error, "iniMouseAccel != iniMaxMouseSpeed!"
-	sta mouseAccel
-.endif
 	LoadB minMouseSpeed, iniMinMouseSpeed
-.ifndef wheels_size_and_speed
 	LoadB mouseAccel, iniMouseAccel
-.endif
 
-.ifdef wheels
-.import sysScrnColors
-	MoveB sysScrnColors, screencolors
-.else
-.ifndef bsw128
-	LoadB screencolors, (DKGREY << 4)+LTGREY
-	sta @1
-.endif
-	jsr i_FillRam
-	.word 1000
-	.word COLOR_MATRIX
-@1:	.byte (DKGREY << 4)+LTGREY
-	START_IO_X
-	LoadB mob0clr, BLUE
-	sta mob1clr
-	LoadB extclr, BLACK
-	END_IO_X
-.endif
+	LoadB GTIA_COLPM0,  $3c			; hue/lum
+	LoadB GTIA_COLPM1,  $c4			; hue/lum
+
 	ldy #62
 @2:	lda #0
-	sta mousePicData,Y
+	sta mousePicData,y
 	dey
 	bpl @2
-.ifdef bsw128
-	sta r0L
-	sta r0H
-.endif
 	ldx #24
 @3:	lda InitMsePic-1,x
 	sta mousePicData-1,x
 	dex
 	bne @3
-.ifdef wheels
-.import sysMob0Clr
-.import sysExtClr
-.import DrawCheckeredScreen
-.global _FirstInit2
-.global _FirstInit3
-_FirstInit2:
-	jsr DrawCheckeredScreen
-	lda screencolors
-	sta LC54D
-	jsr i_ColorRectangle
-	.byte 0, 0                 ; origin
-	.byte 40, 25               ; size
-LC54D:  .byte (DKGREY << 4)+LTGREY ; value
-; ----------------------------------------------------------------------------
-_FirstInit3:
-	START_IO_X
-	lda sysExtClr
-	sta extclr
-	MoveB sysMob0Clr, mob0clr
-	sta mob1clr
-	END_IO_X
-        rts
-.elseif .defined(bsw128)
-	jmp _SetMsePic
-.else
-	jmp UNK_6
-.endif
+	rts

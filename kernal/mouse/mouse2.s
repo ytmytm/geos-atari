@@ -9,7 +9,6 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
 .include "inputdrv.inc"
 
 .import _DoPreviousMenu
@@ -23,13 +22,9 @@
 .import _DisablSprite
 
 .import CallRoutine
-.import PosSprite
-.import DrawSprite
-.import MouseUp
-.import NormalizeX
-.ifndef bsw128
-.import EnablSprite
-.endif
+.import _PosSprite
+.import _DrawSprite
+.import _EnablSprite
 
 .global _MouseOff
 .global _StartMouseMode
@@ -37,28 +32,21 @@
 .global _ClearMouseMode
 .global _MouseUp
 
-.ifdef wheels
-.global ResetMseRegion
-.endif
-
 .segment "mouse2"
 
 _StartMouseMode:
-	bcc @1
+	bcc :+
 	lda r11L
 	ora r11H
-	beq @1
-.ifdef bsw128
-	ldx #r11
-	jsr NormalizeX
-.endif
+	beq :+
 	MoveW r11, mouseXPos
 	sty mouseYPos
 	jsr SlowMouse
-@1:	LoadW mouseVector, CheckClickPos
+	jsr DrawMouse			; force redraw in new position
+:	LoadW mouseVector, CheckClickPos
 	LoadW mouseFaultVec, DoMouseFault
 	LoadB faultData, NULL
-	jmp MouseUp
+	beq _MouseUp
 
 _ClearMouseMode:
 	LoadB mouseOn, NULL
@@ -72,42 +60,22 @@ _MouseOff:
 
 _MouseUp:
 	smbf MOUSEON_BIT, mouseOn
-.ifdef bsw128
-	smbf_ 0, mobenble
-.endif
-	rts
+_RTS:	rts
 
 ProcessMouse:
-.ifdef wheels_bad_ideas
-	; While the mouse pointer is not showing,
-	; Wheels doesn't call the mouse driver.
-	; For a joystick, this means that the 
-	; pointer can't be moved while it's
-	; invisible, and for a 1351 mouse, it means
-	; the input registers may overflow in the
-	; worst case, causing the pointer to jump.
-	;
-	; This is probably not a good idea.
-	bbrf MOUSEON_BIT, mouseOn, @1
 	jsr UpdateMouse
-.else
-	jsr UpdateMouse
-	bbrf MOUSEON_BIT, mouseOn, @1
-.endif
+	bbrf MOUSEON_BIT, mouseOn, _RTS
+
+DrawMouse:
 	jsr CheckMsePos
 	LoadB r3L, 0
-.ifdef bsw128
-	bbsf 7, graphMode, @X
-.endif
 	MoveW msePicPtr, r4
-	jsr DrawSprite
-@X:	MoveW mouseXPos, r4
+	jsr _DrawSprite
+	MoveW mouseXPos, r4
 	MoveB mouseYPos, r5L
-	jsr PosSprite
-.ifndef bsw128
-	jsr EnablSprite
-.endif
-@1:	rts
+	jsr _PosSprite
+	bbrf MOUSEON_BIT, mouseOn, _RTS
+	jmp _EnablSprite
 
 CheckMsePos:
 	ldy mouseLeft
@@ -159,17 +127,6 @@ CheckMsePos:
 @A:	smbf OFFMENU_BIT, faultData
 @B:	rts
 
-.ifdef wheels ; this got moved :(
-.import ScreenDimensions
-ResetMseRegion:
-	ldy #5
-@1:	lda ScreenDimensions,y
-	sta mouseTop,y
-	dey
-	bpl @1
-	rts
-.endif
-
 CheckClickPos:
 	lda mouseData
 	bmi @4
@@ -201,10 +158,6 @@ CheckClickPos:
 @4:	lda otherPressVec
 	ldx otherPressVec+1
 	jmp CallRoutine
-
-.ifndef wheels_size
-	rts ; ???
-.endif
 
 DoMouseFault:
 .ifdef wheels_size_and_speed

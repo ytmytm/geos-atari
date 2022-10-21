@@ -8,13 +8,17 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
 
 .import _HorizontalLine
 .import _InvertLine
 .import _RecoverLine
 .import _VerticalLine
 .import ImprintLine
+
+.import __HorizontalLineDo
+.import __InvertLineDo
+.import __RecoverLineDo
+.import PrepareXCoord
 
 .global _Rectangle
 .global _InvertRectangle
@@ -34,89 +38,86 @@
 ; Return:    draws the rectangle
 ; Destroyed: a, x, y, r5 - r8, r11
 ;---------------------------------------------------------------
-_Rectangle:
-	MoveB r2L, r11L
-@1:	lda r11L
-	and #$07
-	tay
-.ifdef bsw128
-	PushB rcr
-	and #$F0
-	ora #$0A
-	sta rcr
-.endif
-	lda (curPattern),Y
-.ifdef bsw128
-	tax
-	PopB rcr
-	txa
-.endif
-	jsr _HorizontalLine
-	lda r11L
-	inc r11L
-	cmp r2H
-	bne @1
-	rts
-
-;---------------------------------------------------------------
-; InvertRectangle                                         $C12A
-;
-; Pass:      r2L top in scanlines (0-199)
-;            r2H bottom in scanlines (0-199)
-;            r3  left in pixels (0-319)
-;            r4  right in pixels (0-319)
-; Return:    r2L, r3H unchanged
-; Destroyed: a, x, y, r5 - r8
-;---------------------------------------------------------------
-_InvertRectangle:
-	MoveB r2L, r11L
-@1:	jsr _InvertLine
-	lda r11L
-	inc r11L
-	cmp r2H
-	bne @1
-	rts
-
-.segment "graph2e"
-
-;---------------------------------------------------------------
-; RecoverRectangle                                        $C12D
-;
-; Pass:      r2L top (0-199)
-;            r2H bottom (0-199)
-;            r3  left (0-319)
-;            r4  right (0-319)
-; Return:    rectangle recovered from backscreen
-; Destroyed: a, x, y, r5 - r8, r11
-;---------------------------------------------------------------
 _RecoverRectangle:
-	MoveB r2L, r11L
-@1:	jsr _RecoverLine
-	lda r11L
-	inc r11L
-	cmp r2H
-	bne @1
-	rts
-
-.segment "graph2g"
-
-;---------------------------------------------------------------
-; ImprintRectangle                                        $C250
-;
-; Pass:      r2L top (0-199)
-;            r2H bottom (0-199)
-;            r3  left (0-319)
-;            r4  right (0-319)
-; Return:    r2L, r3H unchanged
-; Destroyed: a, x, y, r5 - r8, r11
-;---------------------------------------------------------------
+	PushB r2L
+	sta r11L
+	sty r2L
+	PushW r3
+	PushW r4
+	PushB dispBufferOn
+	ora #ST_WR_FORE | ST_WR_BACK
+	sta dispBufferOn
+	jsr PrepareXCoord
+	PopB dispBufferOn
+	ldy #%01000000
+	bne DoRectangleLoop
 _ImprintRectangle:
-	MoveB r2L, r11L
-@1:	jsr ImprintLine
+	PushB r2L
+	sta r11L
+	sty r2L
+	PushW r3
+	PushW r4
+	PushB dispBufferOn
+	ora #ST_WR_FORE | ST_WR_BACK
+	sta dispBufferOn
+	jsr PrepareXCoord
+	PopB dispBufferOn
+	lda r5L
+	ldy r6L
+	sta r6L
+	sty r5L
+	lda r5H
+	ldy r6H
+	sta r6H
+	sty r5H
+	ldy #%01000000
+	bne DoRectangleLoop
+_Rectangle:
+	ldy #0
+	beq _DoRectangle
+_InvertRectangle:
+	ldy #%10000000
+;	bne _DoRectangle
+
+_DoRectangle:
+	PushB r2L
+	sta r11L
+	sty r2L
+	PushW r3
+	PushW r4
+	jsr PrepareXCoord
+
+DoRectangleLoop:
 	lda r11L
-	inc r11L
+	and #%00000111
+	tay
+	lda (curPattern),Y
+	sta r7L
+	lda r2L
+	beq @hor
+	bmi @inv
+;	bvs @rec
+;	bra @cont
+@rec:	jsr __RecoverLineDo
+	bra @cont
+@hor:	jsr __HorizontalLineDo
+	bra @cont
+@inv:	jsr __InvertLineDo
+@cont:	lda r11L
 	cmp r2H
-	bne @1
+	beq @end
+	inc r11L
+	lda #SC_BYTE_WIDTH
+	add r5L
+	sta r5L
+	sta r6L
+	bcc DoRectangleLoop
+	inc r5H
+	inc r6H
+	bne DoRectangleLoop
+@end:	PopW r4
+	PopW r3
+	PopB r2L
 	rts
 
 .segment "graph2i1"

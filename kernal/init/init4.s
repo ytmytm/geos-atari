@@ -8,7 +8,9 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
+;.include "c64.inc"
+
+.warning "init4-atari.s should panic on BRK"
 
 .import NumTimers
 .import _Panic
@@ -45,7 +47,7 @@ InitRamTab:
 	.word 0                       ; otherPressVec
 	.word 0                       ; StringFaultVec
 	.word 0                       ; alarmTmtVector
-	.word _Panic                  ; BRKVector
+	.word 0 ;_Panic                  ; BRKVector	; XXX should _Panic on BRK
 	.word _RecoverRectangle       ; RecoverVector
 	.byte SelectFlashDelay        ; selectionFlash
 	.byte 0                       ; alphaFlag
@@ -57,11 +59,6 @@ InitRamTab:
 	.byte 0                       ; NumTimers
 	.byte 0                       ; menuNumber
 
-.ifdef bsw128
-	.word clkBoxTemp
-	.byte 2                       ; clkBoxTemp and L881A
-	.word 0
-.else
 	.word clkBoxTemp
 	.byte 1
 	.byte 0                       ; clkBoxTemp
@@ -69,16 +66,5 @@ InitRamTab:
 	.word IconDescVecH
 	.byte 1
 	.byte 0                       ; IconDescVecH
-.endif
-
-.ifdef wheels_dlgbox_dblclick
-	.word   dblDBData
-	.byte   1
-	.byte   OPEN
-.endif
-	.word obj0Pointer
-	.byte 8
-	.byte $28, $29, $2a, $2b
-	.byte $2c, $2d, $2e, $2f
 
 	.word 0

@@ -1,14 +1,13 @@
 ; GEOS KERNAL by Berkeley Softworks
 ; reverse engineered by Maciej Witkowiak, Michael Steil
 ;
-; C64/C128 keyboard driver
+; Atari keyboard driver, Maciej Witkowiak, 2022
 
 .include "const.inc"
 .include "geossym.inc"
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
 
 .import KbdQueHead
 .import KbdQueue
@@ -16,12 +15,13 @@
 
 .global KbdScanHelp2
 .global KbdScanHelp3
-.global KbdScanHelp5
-.global KbdScanHelp6
+;.global KbdScanHelp5
+;.global KbdScanHelp6
 .global _GetNextChar
 
 .segment "keyboard3"
 
+.warning "Insert into queue"
 KbdScanHelp2:
 	php
 	sei
@@ -37,6 +37,7 @@ KbdScanHelp2:
 @1:	plp
 	rts
 
+.warning "get from queue"
 KbdScanHelp3:
 	php
 	sei
@@ -51,9 +52,10 @@ KbdScanHelp3:
 @2:	plp
 	rts
 
+.warning "next queue index"
 KbdScanHelp4:
 	inx
-	cpx #16
+	cpx #16			; XXX queue size, is there a define for this?
 	bne @1
 	ldx #0
 @1:	rts
@@ -66,6 +68,10 @@ _GetNextChar:
 @1:	lda #0
 	rts
 
+;---------------------------------------------------------------
+;---------------------------------------------------------------
+.if 0=1
+.warning "scan for modifiers: bit on=pressed 7=shift, 6=cbm, 5=ctrl return in r1H"
 KbdScanHelp5:
 	LoadB cia1base+0, %11111101
 	lda cia1base+1
@@ -130,6 +136,7 @@ KbdScanHelp5:
 .endif
 	rts
 
+; XXX case change?, but what is the condition?
 KbdScanHelp6:
 	pha
 	and #%01111111
@@ -147,3 +154,5 @@ KbdScanHelp6:
 .endif
 @1:	pla
 	rts
+
+.endif ; 0=1

@@ -1,5 +1,5 @@
 
-VARIANT     ?= bsw
+VARIANT     ?= atari
 DRIVE       ?= drv1541
 INPUT       ?= joydrv
 
@@ -10,6 +10,10 @@ PUCRUNCH     = pucrunch
 EXOMIZER     = exomizer
 D64_RESULT   = geos.d64
 DESKTOP_CVT  = desktop.cvt
+
+ifeq ($(VARIANT), atari)
+XEX_RESULT = GEOS.XEX
+endif
 
 ifeq ($(VARIANT),bsw128)
 D64_TEMPLATE = GEOS128.D64
@@ -145,50 +149,42 @@ ifneq ($(VARIANT), bsw128)
 	kernal/ramexp/ramexp1.s \
 	kernal/ramexp/ramexp2.s \
 	kernal/rename.s \
+	kernal/rtc/rtc.s \
 	kernal/tobasic/tobasic1.s
 endif
 
-# code that is in front bank of C128 only
-ifeq ($(VARIANT), bsw128)
-	KERNAL_SOURCES += \
-	kernal/start/start128.s \
-	kernal/128k/bank_jmptab_front.s \
-	kernal/128k/banking.s \
-	kernal/128k/cbm_jmptab.s \
-	kernal/c128/iojmptab.s \
-	kernal/c128/iowrapper.s \
-	kernal/c128/irq_front.s \
-	kernal/c128/junk_front.s \
-	kernal/c128/low_jmptab.s \
-	kernal/c128/mouseproxy.s \
-	kernal/c128/vdc_base.s \
-	kernal/c128/vdc_init.s \
-	kernal/c128/vectors_front.s \
-	kernal/files/compat.s \
-	kernal/graph/normalize.s \
-	kernal/graph/mode.s \
-	kernal/memory/memory_128.s
-endif
-
-# code that is in C128 back bank
-KERNAL2_SOURCES= \
-	kernal/128k/bank_jmptab_back.s \
-	kernal/128k/cache.s \
-	kernal/128k/swapdiskdriver.s \
-	kernal/640/bswfont80.s \
+# Atari ported during devel
+ifeq ($(VARIANT), atari)
+KERNAL_SOURCES = \
+	drv/ramdrv-atari.s \
+	input/joydrv_atari_simple.s \
+	kernal/start/start_atari.s \
+	kernal/bswfont/bswfont.s \
+	kernal/hw/displaylist.s \
+	kernal/hw/displaylistinit.s \
 	kernal/bitmask/bitmask1.s \
 	kernal/bitmask/bitmask2.s \
 	kernal/bitmask/bitmask3.s \
-	kernal/bswfont/bswfont.s \
-	kernal/c128/irq_back.s \
-	kernal/c128/junk_back.s \
-	kernal/c128/softsprites.s \
-	kernal/c128/vdc.s \
-	kernal/c128/vdc_base.s \
-	kernal/c128/vectors_back.s \
+	kernal/conio/conio1.s \
+	kernal/conio/conio2.s \
+	kernal/conio/conio3a.s \
 	kernal/conio/conio3b.s \
+	kernal/conio/conio4.s \
 	kernal/conio/conio5.s \
+	kernal/conio/conio6.s \
+	kernal/dlgbox/dlgbox1i.s \
+	kernal/dlgbox/dlgbox1k.s \
+	kernal/dlgbox/dlgbox2.s \
 	kernal/files/files1a2a.s \
+	kernal/files/files1a2b.s \
+	kernal/files/files1b.s \
+	kernal/files/files2.s \
+	kernal/files/files3.s \
+	kernal/files/files6a.s \
+	kernal/files/files6b.s \
+	kernal/files/files6c.s \
+	kernal/files/files7.s \
+	kernal/files/files8.s \
 	kernal/files/files9.s \
 	kernal/fonts/fonts1.s \
 	kernal/fonts/fonts2.s \
@@ -196,51 +192,70 @@ KERNAL2_SOURCES= \
 	kernal/fonts/fonts4.s \
 	kernal/fonts/fonts4a.s \
 	kernal/fonts/fonts4b.s \
-	kernal/graph/line.s \
-	kernal/graph/rect.s \
-	kernal/graph/scanline.s \
-	kernal/graph/graph2p.s \
 	kernal/graph/bitmapclip.s \
 	kernal/graph/bitmapup.s \
+	kernal/graph/clrscr.s \
+	kernal/graph/graphicsstring.s \
+	kernal/graph/graph2l1.s \
+	kernal/graph/inline.s \
+	kernal/graph/inlinefunc.s \
+	kernal/start/inlinefuncdebug.s \
+	kernal/graph/line.s \
+	kernal/graph/pattern.s \
 	kernal/graph/point.s \
-	kernal/graph/normalize.s \
+	kernal/graph/rect.s \
+	kernal/graph/scanline.s \
+	kernal/header/header.s \
+	kernal/hw/hw1b.s \
+	kernal/icon/icon1.s \
+	kernal/icon/icon2.s \
+	kernal/irq/irq.s \
+	kernal/init/init1.s \
+	kernal/init/init2.s \
+	kernal/init/init4.s \
+	kernal/jumptab/jumptab-stub.s \
+	kernal/keyboard/keyboard1.s \
+	kernal/keyboard/keyboard2.s \
+	kernal/keyboard/keyboard3.s \
+	kernal/load/load1b.s \
+	kernal/load/load1c.s \
+	kernal/mainloop/mainloop1.s \
+	kernal/mainloop/mainloop3.s \
 	kernal/math/shl.s \
+	kernal/math/shr.s \
+	kernal/math/muldiv.s \
 	kernal/math/neg.s \
-	kernal/memory/backram.s \
-	kernal/tobasic/tobasic2_128.s
-
-# code that is in Wheels front bank only
-ifeq ($(VARIANT), wheels)
-KERNAL_SOURCES += \
-	kernal/wheels/wheels.s \
-	kernal/wheels/ram.s \
-	kernal/wheels/devnum.s \
-	kernal/wheels/format.s \
-	kernal/wheels/partition.s \
-	kernal/wheels/directory.s \
-	kernal/wheels/validate.s \
-	kernal/wheels/copydisk.s \
-	kernal/wheels/copyfile.s \
-	kernal/wheels/loadb.s \
-	kernal/wheels/tobasicb.s \
-	kernal/wheels/reux.s
+	kernal/math/dec.s \
+	kernal/math/random.s \
+	kernal/math/crc.s \
+	kernal/memory/memory1a.s \
+	kernal/memory/memory1b.s \
+	kernal/memory/memory2.s \
+	kernal/memory/memory3.s \
+	kernal/menu/menu1.s \
+	kernal/menu/menu2.s \
+	kernal/menu/menu3.s \
+	kernal/misc/misc.s \
+	kernal/mouse/mouse1.s \
+	kernal/mouse/mouse2.s \
+	kernal/mouse/mouse3.s \
+	kernal/mouse/mouse4.s \
+	kernal/mouse/mouseptr.s \
+	kernal/patterns/patterns.s \
+	kernal/process/process1.s \
+	kernal/process/process2.s \
+	kernal/process/process3a.s \
+	kernal/process/process3aa.s \
+	kernal/process/process3b.s \
+	kernal/process/process3c.s \
+	kernal/rename.s \
+	kernal/ramexp/ramexp1.s \
+	kernal/serial/serial1.s \
+	kernal/serial/serial2.s \
+	kernal/sprites/sprites.s \
+	kernal/tobasic/tobasic2.s \
+	kernal/vars/vars.s
 endif
-
-ifeq ($(VARIANT), bsw128)
-RELOCATOR_SOURCES = \
-	kernal/start/relocator128.s
-endif
-
-DRIVER_SOURCES= \
-	drv/drv1541.bin \
-	drv/drv1571.bin \
-	drv/drv1581.bin \
-	input/joydrv.bin \
-	input/amigamse.bin \
-	input/lightpen.bin \
-	input/mse1351.bin \
-	input/koalapad.bin \
-	input/pcanalog.bin
 
 DEPS= \
 	config.inc \
@@ -254,154 +269,43 @@ DEPS= \
 	inc/kernal.inc \
 	inc/printdrv.inc
 
+ifeq ($(VARIANT), atari)
+DEPS += \
+	inc/atari.inc
+endif
+
 KERNAL_OBJS=$(KERNAL_SOURCES:.s=.o)
-KERNAL2_OBJS=$(KERNAL2_SOURCES:.s=.o)
-RELOCATOR_OBJS=$(RELOCATOR_SOURCES:.s=.o)
-DRIVER_OBJS=$(DRIVER_SOURCES:.s=.o)
-ALL_OBJS=$(KERNAL_OBJS) $(DRIVER_OBJS)
+ALL_OBJS=$(KERNAL_OBJS)
 
 BUILD_DIR=build/$(VARIANT)
 
 PREFIXED_KERNAL_OBJS = $(addprefix $(BUILD_DIR)/, $(KERNAL_OBJS))
-PREFIXED_KERNAL2_OBJS = $(addprefix $(BUILD_DIR)/, $(KERNAL2_OBJS))
-PREFIXED_RELOCATOR_OBJS = $(addprefix $(BUILD_DIR)/, $(RELOCATOR_OBJS))
 
 ALL_BINS= \
-	$(BUILD_DIR)/kernal/kernal.bin \
-	$(BUILD_DIR)/drv/drv1541.bin \
-	$(BUILD_DIR)/drv/drv1571.bin \
-	$(BUILD_DIR)/drv/drv1581.bin \
-	$(BUILD_DIR)/input/joydrv.bin \
-	$(BUILD_DIR)/input/amigamse.bin \
-	$(BUILD_DIR)/input/lightpen.bin \
-	$(BUILD_DIR)/input/mse1351.bin \
-	$(BUILD_DIR)/input/koalapad.bin \
-	$(BUILD_DIR)/input/pcanalog.bin
+	$(BUILD_DIR)/kernal/kernal.bin
 
-ifeq ($(VARIANT), bsw128)
-	ALL_BINS += \
-	$(BUILD_DIR)/kernal/kernal2.bin \
-	$(BUILD_DIR)/kernal/relocator.bin
-endif
-
+ifeq ($(VARIANT), atari)
+all: $(BUILD_DIR)/$(XEX_RESULT)
+else
 all: $(BUILD_DIR)/$(D64_RESULT)
-
-regress:
-	@echo "********** Building variant 'bsw'"
-	@$(MAKE) VARIANT=bsw all
-	./regress.sh bsw
-	@echo "********** Building variant 'wheels'"
-	@$(MAKE) VARIANT=wheels all
-	./regress.sh wheels
+endif
 
 clean:
 	rm -rf build
 
-ifeq ($(VARIANT),bsw128)
-$(BUILD_DIR)/$(D64_RESULT): $(BUILD_DIR)/kernal_compressed.prg
-	@if [ -e $(D64_TEMPLATE) ]; then \
-		cp $(D64_TEMPLATE) $@; \
-		echo delete geos128 geoboot128 | $(C1541) $@ ;\
-		echo write $< geos128 | $(C1541) $@ ;\
-		echo \*\*\* Created $@ based on $(D64_TEMPLATE).; \
-	else \
-		echo format geos,00 d64 $@ | $(C1541) >/dev/null; \
-		echo write $< geos128 | $(C1541) $@ >/dev/null; \
-		if [ -e $(DESKTOP_CVT) ]; then echo geoswrite $(DESKTOP_CVT) | $(C1541) $@; fi >/dev/null; \
-		echo \*\*\* Created fresh $@.; \
-	fi;
-else
-$(BUILD_DIR)/$(D64_RESULT): $(BUILD_DIR)/kernal_compressed.prg
-	@if [ -e $(D64_TEMPLATE) ]; then \
-		cp $(D64_TEMPLATE) $@; \
-		echo delete geos geoboot | $(C1541) $@ ;\
-		echo write $< geos | $(C1541) $@ ;\
-		echo \*\*\* Created $@ based on $(D64_TEMPLATE).; \
-	else \
-		echo format geos,00 d64 $@ | $(C1541) >/dev/null; \
-		echo write $< geos | $(C1541) $@ >/dev/null; \
-		if [ -e $(DESKTOP_CVT) ]; then echo geoswrite $(DESKTOP_CVT) | $(C1541) $@; fi >/dev/null; \
-		echo \*\*\* Created fresh $@.; \
-	fi;
+ifeq ($(VARIANT), atari)
+$(BUILD_DIR)/$(XEX_RESULT): $(ALL_BINS)
+	cp $(BUILD_DIR)/kernal/kernal.bin $(BUILD_DIR)/$(XEX_RESULT)
 endif
 
-$(BUILD_DIR)/kernal_compressed.prg: $(BUILD_DIR)/kernal_combined.prg
-	@echo Creating $@
-ifeq ($(VARIANT), bsw128)
-	# start address ($4800) is underneath BASIC ROM on the 128; turn off BASIC
-	# and KERNAL before jumping to unpacked code
-	$(EXOMIZER) sfx 0x4800 -t128 -Di_ram_exit='$$3e' -o $@ $<
-else
-	$(PUCRUNCH) -f -c64 -x0x5000 $< $@ 2> /dev/null
-endif
-
-$(BUILD_DIR)/kernal_combined.prg: $(ALL_BINS)
-ifeq ($(VARIANT), bsw128)
-	@echo Creating $@ from kernal.bin $(DRIVE).bin kernal2.bin relocator.bin $(INPUT).bin
-	printf "\x00\x48" > $(BUILD_DIR)/tmp.bin
-# relocator.bin($4800) @ $4800-$4C00 -> $4800
-	cat $(BUILD_DIR)/kernal/relocator.bin /dev/zero | dd bs=1 count=1024 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-# kernal.bin($5000)    @ $5000-$5400 -> $4C00
-	cat $(BUILD_DIR)/kernal/kernal.bin /dev/zero | dd bs=1 count=1024 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-# kernal.bin($5000)    @ $C000-$FD00 -> $5000
-	cat $(BUILD_DIR)/kernal/kernal.bin /dev/zero | dd bs=1 count=15616 skip=28672 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-# input*.bin($FD00)    @ $FD00-$FE80 -> $8D00
-	cat $(BUILD_DIR)/input/$(INPUT).bin /dev/zero | dd bs=1 count=384 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-# kernal.bin($5000)    @ $FE80-$0000 -> $8E80
-	cat $(BUILD_DIR)/kernal/kernal.bin /dev/zero | dd bs=1 count=384 skip=44672 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-# drv*.bin($9000)      @ $9000-$9D80 -> $9000
-	cat $(BUILD_DIR)/drv/$(DRIVE).bin /dev/zero | dd bs=1 count=3456 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-# kernal.bin($5000)    @ $9D80-$A000 -> $9D80
-	cat $(BUILD_DIR)/kernal/kernal.bin /dev/zero | dd bs=1 count=640 skip=19840 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-# kernal2.bin($C000)   @ $E000-$0000 -> $A000
-	cat $(BUILD_DIR)/kernal/kernal2.bin /dev/zero | dd bs=1 count=8192 skip=8192 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-# kernal2.bin($C000)   @ $C000-$E000 -> $C000
-	cat $(BUILD_DIR)/kernal/kernal2.bin /dev/zero | dd bs=1 count=8192 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-
-	@mv $(BUILD_DIR)/tmp.bin $(BUILD_DIR)/kernal_combined.prg
-
-else
-	@echo Creating $@ from kernal.bin $(DRIVE).bin $(INPUT).bin
-	printf "\x00\x50" > $(BUILD_DIR)/tmp.bin
-	dd if=$(BUILD_DIR)/kernal/kernal.bin bs=1 count=16384 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-	cat $(BUILD_DIR)/drv/$(DRIVE).bin /dev/zero | dd bs=1 count=3456 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-	cat $(BUILD_DIR)/kernal/kernal.bin /dev/zero | dd bs=1 count=24832 skip=19840 >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-	@cat $(BUILD_DIR)/input/$(INPUT).bin >> $(BUILD_DIR)/tmp.bin 2> /dev/null
-	@mv $(BUILD_DIR)/tmp.bin $(BUILD_DIR)/kernal_combined.prg
-endif
+.EXPORT_ALL_VARIABLES:
+	export
 
 ifeq ($(VARIANT),bsw128)
 INPUTCFG = input/inputdrv_bsw128.cfg
 else
 INPUTCFG = input/inputdrv.cfg
 endif
-
-$(BUILD_DIR)/drv/drv1541.bin: $(BUILD_DIR)/drv/drv1541.o drv/drv1541.cfg $(DEPS)
-	$(LD) -C drv/drv1541.cfg $(BUILD_DIR)/drv/drv1541.o -o $@
-
-$(BUILD_DIR)/drv/drv1571.bin: $(BUILD_DIR)/drv/drv1571.o drv/drv1571.cfg $(DEPS)
-	$(LD) -C drv/drv1571.cfg $(BUILD_DIR)/drv/drv1571.o -o $@
-
-$(BUILD_DIR)/drv/drv1581.bin: $(BUILD_DIR)/drv/drv1581.o drv/drv1581.cfg $(DEPS)
-	$(LD) -C drv/drv1581.cfg $(BUILD_DIR)/drv/drv1581.o -o $@
-
-$(BUILD_DIR)/input/amigamse.bin: $(BUILD_DIR)/input/amigamse.o $(INPUTCFG) $(DEPS)
-	$(LD) -C $(INPUTCFG) $(BUILD_DIR)/input/amigamse.o -o $@
-
-$(BUILD_DIR)/input/joydrv.bin: $(BUILD_DIR)/input/joydrv.o $(INPUTCFG) $(DEPS)
-	$(LD) -C $(INPUTCFG) $(BUILD_DIR)/input/joydrv.o -o $@
-
-$(BUILD_DIR)/input/lightpen.bin: $(BUILD_DIR)/input/lightpen.o $(INPUTCFG) $(DEPS)
-	$(LD) -C $(INPUTCFG) $(BUILD_DIR)/input/lightpen.o -o $@
-
-$(BUILD_DIR)/input/mse1351.bin: $(BUILD_DIR)/input/mse1351.o $(INPUTCFG) $(DEPS)
-	$(LD) -C $(INPUTCFG) $(BUILD_DIR)/input/mse1351.o -o $@
-
-$(BUILD_DIR)/input/koalapad.bin: $(BUILD_DIR)/input/koalapad.o $(INPUTCFG) $(DEPS)
-	$(LD) -C $(INPUTCFG) $(BUILD_DIR)/input/koalapad.o -o $@
-
-$(BUILD_DIR)/input/pcanalog.bin: $(BUILD_DIR)/input/pcanalog.o $(INPUTCFG) $(DEPS)
-	$(LD) -C $(INPUTCFG) $(BUILD_DIR)/input/pcanalog.o -o $@
 
 $(BUILD_DIR)/%.o: %.s
 	@mkdir -p `dirname $@`
@@ -410,10 +314,6 @@ $(BUILD_DIR)/%.o: %.s
 $(BUILD_DIR)/kernal/kernal.bin: $(PREFIXED_KERNAL_OBJS) kernal/kernal_$(VARIANT).cfg
 	@mkdir -p $$(dirname $@)
 	$(LD) -C kernal/kernal_$(VARIANT).cfg $(PREFIXED_KERNAL_OBJS) -o $@ -m $(BUILD_DIR)/kernal/kernal.map -Ln $(BUILD_DIR)/kernal/kernal.lab
-
-$(BUILD_DIR)/kernal/kernal2.bin: $(PREFIXED_KERNAL2_OBJS) kernal/kernal2_$(VARIANT).cfg
-	@mkdir -p $$(dirname $@)
-	$(LD) -C kernal/kernal2_$(VARIANT).cfg $(PREFIXED_KERNAL2_OBJS) -o $@ -m $(BUILD_DIR)/kernal/kernal2.map  -Ln $(BUILD_DIR)/kernal/kernal2.lab
 
 $(BUILD_DIR)/kernal/relocator.bin: $(PREFIXED_RELOCATOR_OBJS) kernal/relocator_$(VARIANT).cfg
 	@mkdir -p $$(dirname $@)

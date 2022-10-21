@@ -8,7 +8,6 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
 
 .import BitMaskPow2Rev
 .import _GetScanLine
@@ -312,24 +311,19 @@ _DrawLine:
 ;---------------------------------------------------------------
 _DrawPoint:
 	php
-.ifdef bsw128
-	jsr _TempHideMouse
-	ldx #r3
-	jsr _NormalizeX
-.endif
 	ldx r11L
 	jsr _GetScanLine
-.ifdef bsw128
-	bbsf 7, graphMode, DrwPoi80
-.endif
+
+	ldx r3H
 	lda r3L
-	and #%11111000
+	lsr r3H
+	ror
+	lsr
+	lsr
 	tay
-	lda r3H
-	beq @1
-	inc r5H
-	inc r6H
-@1:	lda r3L
+	stx r3H
+
+	lda r3L
 	and #%00000111
 	tax
 	lda BitMaskPow2Rev,x
@@ -353,32 +347,6 @@ _DrawPoint:
 	sta (r5),y
 	rts
 
-.ifdef bsw128
-DrwPoi80:
-	jsr GetLeftXAddress
-	lda BitMaskPow2Rev,x
-	plp
-	bmi @3
-	bcc @1
-	jsr LF4A7
-	bra @2
-@1:	eor #$FF
-	jsr LF4B7
-@2:	jsr StaBackbuffer80
-	jmp StaFrontbuffer80
-@3:	pha
-	eor #$FF
-	jsr LF558
-	sta DrwPointTemp
-	pla
-	jsr LF4B7
-	ora DrwPointTemp
-	jmp StaFrontbuffer80
-
-DrwPointTemp:
-	.byte 0
-.endif
-
 ;---------------------------------------------------------------
 ; TestPoint                                               $C13F
 ;
@@ -389,23 +357,19 @@ DrwPointTemp:
 ; Destroyed: a, x, y, r5, r6
 ;---------------------------------------------------------------
 _TestPoint:
-.ifdef bsw128
-	jsr _TempHideMouse
-	ldx #r3
-	jsr _NormalizeX
-.endif
 	ldx r11L
 	jsr _GetScanLine
-.ifdef bsw128
-	bbsf 7, graphMode, TestPoi80
-.endif
+
+	ldx r3H
 	lda r3L
-	and #%11111000
+	lsr r3H
+	ror
+	lsr
+	lsr
 	tay
-	lda r3H
-	beq @1
-	inc r6H
-@1:	lda r3L
+	stx r3H
+
+	lda r3L
 	and #%00000111
 	tax
 	lda BitMaskPow2Rev,x
@@ -415,24 +379,3 @@ _TestPoint:
 	rts
 @2:	clc
 	rts
-
-.ifdef bsw128
-.global CmpWR3R4
-TestPoi80:
-	jsr GetLeftXAddress
-	lda BitMaskPow2Rev,x
-	jsr LF4B7
-	beq LF29F
-	sec
-	rts
-LF29F:	clc
-	rts
-
-CmpWR3R4:
-	lda r3H
-	cmp r4H
-	bne LF2AB
-	lda r3L
-	cmp r4L
-LF2AB:	rts
-.endif

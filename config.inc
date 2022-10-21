@@ -96,6 +96,63 @@ config_inc = 1
 	; throughout the code
 .endif
 
+.ifdef beamracer
+	; make use of all reusable Wheels optimizations and fixes
+	wheels_size = 1
+	wheels_size_and_speed = 1
+	wheels_remove_BootGEOS = 1
+	wheels_fixes = 1
+
+	remove_dead_bytes = 1
+
+	; replace BASIC reboot code with trivial version (+200 bytes)
+	removeToBASIC = 1
+
+	; for 2MHz-on-border on C128 in 64 mode (no beamracer version for C128)
+	;use2MHz = 1
+
+	; only VLIR and SEQ supported
+	;onlyVLIR = 1
+
+	; RAM expansions configuration
+	; this occupies bank 0 (DeskTop cache, DA swap file)
+        ;               banks 1-3 (1541 cache)
+	useBeamRacerRam = 1
+
+	; Beamracer display list bank
+	br_dlist_bank =  7
+	; Beamracer display list address (right behind the screen) (this would have to be defined as VASYL memory area load/run address)
+	br_dlist_base = $c0 ; $00C0 ;$A000 ;+8000
+	; Beamracer screen bank
+	br_screen_bank = 7
+	; Beamracer screen base addresses, low byte *must* be equal in both
+	br_screen_base = $C000
+	br_backscreen_base = $E000
+
+	; GEOS2000
+	; makes drawing dialog boxes much faster, might cause visual mess
+	; takes more bytes
+	;speedupDlgBox = 1
+
+	; GEOS2000
+	; bug - when 0 no blinking in menu
+	;newMenu_5 = 1
+
+	; RTC driver to set date&time upon boot
+	rtc_Ultimate2Plus = 1
+
+.endif
+
+.ifdef atari
+	; make use of all reusable Wheels optimizations and fixes
+;	wheels_size = 1
+;	wheels_size_and_speed = 1
+;	wheels_remove_BootGEOS = 1
+;	wheels_fixes = 1
+
+	remove_dead_bytes = 1
+.endif
+
 .ifdef custom
 	; make use of all reusable Wheels optimizations and fixes
 	wheels_size = 1
@@ -131,6 +188,10 @@ config_inc = 1
 	; GEOS2000
 	; bug - when 0 no blinking in menu
 	;newMenu_5 = 1
+
+	; RTC driver to set date&time upon boot
+	;rtc_Ultimate2Plus = 1
+
 .endif
 
 ; Feel (almost) free to change values below:
@@ -155,10 +216,25 @@ REUOsVarBackup  =    $7900                      ; base for OS_VARS_LGH bytes for
 REUDskDrvSPC    =    $8300                      ; base for 4*DISK_DRV_LGH disk drivers
 
 ; do not change two values below - it's automatic
-.if .defined(usePlus60K) || .defined(useRamCart64) || .defined(useRamCart128)
+; Atari doesn't have REU and RAM expansion is occupied by OS by default, so no support for REU-like RAM OPs for apps
+.if .defined(atari)
+;REUPresent = 1
+;useRamExp = 1
+.else
+.if .defined(usePlus60K) || .defined(useRamCart64) || .defined(useRamCart128) || .defined(useBeamRacerRam)
 useRamExp = 1
 .else
 REUPresent = 1
+.endif
+.endif
+
+; but for Beamracer we want to keep REU support too
+.if .defined(useBeamRacerRam)
+REUPresent = 1
+.endif
+
+.if .defined(rtc_Ultimate2Plus)
+useRTC = 1
 .endif
 
 .ifdef traps

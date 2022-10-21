@@ -1,17 +1,14 @@
 ; GEOS KERNAL by Berkeley Softworks
 ; reverse engineered by Maciej Witkowiak, Michael Steil
 ;
-; IRQ/NMI handlers
+; IRQ/NMI handlers for Atari by Maciej Witkowiak, 2022
 
 .include "const.inc"
 .include "geossym.inc"
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
-.ifdef bsw128
-.include "inputdrv.inc"
-.endif
+.include "atari.inc"
 
 ; keyboard.s
 .import _DoKeyboardScan
@@ -22,157 +19,105 @@
 .import tempIRQAcc
 
 .import CallRoutine
-.import GetRandom
-
-.ifdef bsw128
-.import CallAddr
-.import RestoreConfig
-.import CallAddr2
-.import ProcessMouse
-.import _DoKeyboardScan
-.endif
 
 ; used by boot.s
 .global _IRQHandler
 .global _NMIHandler
+.global _BRKHandler
+; used by _DoKeyboardScan (possibly more than once)?
+.global tmpPOKEY_IRQST
+
+.segment "spritebuf"
+tmpPOKEY_IRQST:	.res 1				; shadow register
 
 .segment "irq"
 
+	; IRQ only from the keyboard or BRK
 _IRQHandler:
-.ifdef bsw128
-	txa
-	pha
-	tya
-	pha
-	tsx
-	lda $0108,x
-	and #%00010000
-	beq @1
-	jmp (BRKVector)
-@1:	PushB bank0SaveRcr
-	PushB bank0SaveA
-	PushB bank0SavePS
-	PushW CallAddr2
-	PushB CallAddr
-	PushB RestoreConfig
-.else
 	cld
 	sta tempIRQAcc
 	pla
 	pha
-	and #%00010000
-	beq @1
-	pla
+	and #%00010000				; was that BRK?
+	beq :+
+;	pla					; why they (BSW) put it here? without it BRKVector can return with RTI (providing there is a NOP after BRK)
 	jmp (BRKVector)
-@1:	txa
+:	lda POKEY_IRQST				; was that break/keyboard irq? (bit=0 means 'yes')
+	sta tmpPOKEY_IRQST
+	eor #$ff				; cleared bits are set
+	and #%11000000				; our sources are set?
+	beq :+					; no?
+	lda #0
+	sta POKEY_IRQEN				; ack interrupts
+	lda #%11000000
+	sta POKEY_IRQEN				; re-enable interrupts from keyboard/break key
+	txa
 	pha
 	tya
 	pha
-.ifdef use2MHz
-	LoadB clkreg, 0
-.endif
-.endif
+	lda tmpPOKEY_IRQST			; bit 7=0 is BREAK, bmi over and take mapped POKEY_KBCODE
+	jsr _DoKeyboardScan
+	pla
+	tay
+	pla
+	tax
+:	lda tempIRQAcc
+	rti
+
+_BRKHandler:					; in principle this is Panic
+	rti
+
+	; main interrupt called on every frame
+_NMIHandler:
+	pha
+	txa
+	pha
+	tya
+	pha
 	PushW CallRLo
 	PushW returnAddress
+
 	ldx #0
-@2:	lda r0,x
+:	lda r0,x
 	pha
 	inx
 	cpx #32
-	bne @2
-	START_IO
+	bne :-
+
 	lda dblClickCount
-	beq @3
+	beq :+
 	dec dblClickCount
-@3:
-.ifdef bsw128
-	jsr ProcessMouse
-.endif
-	ldy KbdQueFlag
-	beq @4
+
+:	ldy KbdQueFlag
+	beq :+
 	iny
-	beq @4
+	beq :+
 	dec KbdQueFlag
-@4:
-.ifdef bsw128
-	jsr _DoKeyboardScan
-	jsr SetMouse
-.else
-	jsr _DoKeyboardScan
-.endif
+
+:;	jsr _DoKeyboardScan			; keyboard is processed only from keyboard IRQ
 	lda alarmWarnFlag
-	beq @5
+	beq :+
 	dec alarmWarnFlag
-@5:
-.ifdef wheels_screensaver
-.import ProcessMouse
-	lda saverStatus
-	lsr
-	bcc @Y ; screensaver not running
-	jsr ProcessMouse
-	jsr GetRandom
-	bra @X
-.endif
-@Y:	lda intTopVector
+
+:	lda intTopVector
 	ldx intTopVector+1
 	jsr CallRoutine
 	lda intBotVector
 	ldx intBotVector+1
 	jsr CallRoutine
-@X:	lda #1
-	sta grirq
-	END_IO
-.ifdef use2MHz
-	LoadW $fffe, IRQ2Handler
-	LoadB rasreg, $fc
-.endif
+
 	ldx #31
-@6:	pla
+:	pla
 	sta r0,x
 	dex
-	bpl @6
+	bpl :-
+
 	PopW returnAddress
 	PopW CallRLo
-.ifdef bsw128
-	PopB RestoreConfig
-	PopB CallAddr
-	PopW CallAddr2
-	PopB bank0SavePS
-	PopB bank0SaveA
-	PopB bank0SaveRcr
 	pla
 	tay
 	pla
 	tax
-	rts
-.else
 	pla
-	tay
-	pla
-	tax
-	lda tempIRQAcc
-_NMIHandler:
+	sta ANTIC_NMIRES			; ack interrupt
 	rti
-.endif
-
-.ifdef use2MHz
-IRQ2Handler:
-	pha
-	txa
-	pha
-	START_IO_X
-	lda rasreg
-	and #%11110000
-	beq @1
-	cmp #$f0
-	bne @2
-@1:	LoadB clkreg, 1
-@2:	LoadB rasreg, $2c
-	LoadW $fffe, _IRQHandler
-	inc grirq
-	END_IO_X
-	pla
-	tax
-	pla
-	rti
-.endif

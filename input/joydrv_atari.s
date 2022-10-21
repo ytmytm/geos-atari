@@ -2,14 +2,17 @@
 ; reverse engineered by Maciej Witkowiak, Michael Steil
 ;
 ; Joystick input driver
+; Atari version, Maciej Witkowiak, 2022
 
 .include "const.inc"
 .include "geossym.inc"
 .include "geosmac.inc"
 .include "jumptab.inc"
-.include "c64.inc"
+.include "atari.inc"
 
 .segment "inputdrv"
+
+.error "This doesn't work - wrong system initalization?"
 
 MouseInit:
 	jmp _MouseInit
@@ -17,27 +20,15 @@ SlowMouse:
 	jmp _SlowMouse
 UpdateMouse:
 	jmp _UpdateMouse
-.ifdef bsw128
-SetMouse:
-	rts
-.endif
 
-joyStat0:
-	.byte 0
-joyStat1:
-	.byte 0
-joyStat2:
-	.byte 0
-joyStat3:
-	.byte 0
-joyStat4:
-	.byte 0
-joyStat5:
-	.byte 0
-joyStat6:
-	.byte 0
-joyStat7:
-	.byte 0
+joyStat0:	.byte 0
+joyStat1:	.byte 0
+joyStat2:	.byte 0
+joyStat3:	.byte 0
+joyStat4:	.byte 0
+joyStat5:	.byte 0
+joyStat6:	.byte 0
+joyStat7:	.byte 0
 
 _MouseInit:
 	jsr _SlowMouse
@@ -46,7 +37,7 @@ _MouseInit:
 	sta mouseXPos+1
 	sta mouseYPos
 	LoadB inputData, $ff
-	jmp JProc1_4
+	bne JProc1_4
 
 _SlowMouse:
 	LoadB mouseSpeed, NULL
@@ -73,9 +64,10 @@ UpdMse0:
 	add joyStat1
 	sta joyStat1
 	lda r1H
+	beq :+
 	adc mouseYPos
 	sta mouseYPos
-	rts
+:	rts
 
 JoyProc1:
 	ldx inputData
@@ -136,8 +128,12 @@ JProc2_1:
 	rts
 
 JoyProc3:
-	LoadB cia1base, $ff
-	lda cia1base+1
+	lda GTIA_TRIG0
+	and #%00000001
+	tay
+	lda PIA_PORTA
+	and #%00001111
+	ora JoyTrigToggle,y
 	eor #$ff
 	cmp joyStat7
 	sta joyStat7
@@ -166,11 +162,10 @@ JProc3_1:
 JProc3_2:
 	rts
 
-JoyDirectionTab:
-	.byte $ff, $02, $06, $ff
-	.byte $04, $03, $05, $ff
-	.byte $00, $01, $07, $ff
-	.byte $ff, $ff, $ff, $ff
+; to speedup joystick trigger translation
+JoyTrigToggle:
+	.byte %11100000, %11110000
+
 
 JoyProc4:
 	lda JoyTab1,x
@@ -205,3 +200,11 @@ JoyTab1:
 JoyTab2:
 	.byte $00, $40, $40, $c0
 	.byte $80, $80, $00, $00
+
+.segment "mouseptr"
+; this could be shared among drivers, besides we ran out of space
+JoyDirectionTab:
+	.byte $ff, $02, $06, $ff
+	.byte $04, $03, $05, $ff
+	.byte $00, $01, $07, $ff
+	.byte $ff, $ff, $ff, $ff

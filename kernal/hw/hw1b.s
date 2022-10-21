@@ -8,100 +8,86 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
+.include "atari.inc"
 
 .import ResetMseRegion
-.import Init_KRNLVec
-.import SetVICRegs
-.import VIC_IniTbl_end
-.import VIC_IniTbl
 .import KbdQueTail
 .import KbdQueHead
 .import KbdQueFlag
-.import KbdDBncTab
-.import KbdDMltTab
-.import InitVDC
+;.import KbdDBncTab	; unused, free 7 bytes on Atari
+;.import KbdDMltTab	; unused, free 7 bytes on Atari
 
-.import SetColorMode
+; atari
+.import displaylist
+.import GEOS_PMBASE
+.import _NMIHandler
+.import _IRQHandler
 
 .global _DoFirstInitIO
 
 .segment "hw1b"
 
 _DoFirstInitIO:
-	LoadB CPU_DDR, $2f
-.ifdef bsw128
-	LoadB config, CIOIN
-.else
-ASSERT_NOT_BELOW_IO
-	LoadB CPU_DATA, KRNL_IO_IN
-.ifdef wheels
-	sta scpu_turbo
-.endif
-.endif
-	ldx #7
-	lda #$ff
-@1:	sta KbdDMltTab,x
-	sta KbdDBncTab,x
-	dex
-	bpl @1
-	stx KbdQueFlag
-	stx cia1base+2
+
+.assert *<$c000, error, "_DoFirstInitIO can't be under ROM (because it turns ROM off)"
+
+	php
+	sei
+	LoadB ANTIC_NMIEN, %00000000                    ; no interrupts from ANTIC
+	LoadB POKEY_IRQEN, %00000000                    ; no interrupts from POKEY
+
+	LoadW NMI_VECTOR, _NMIHandler
+	LoadW IRQ_VECTOR, _IRQHandler
+
+	LoadB POKEY_IRQEN, %11000000			; enable BREAK and keyboard IRQ
+	LoadB ANTIC_NMIEN, %01000000			; enable VBLANK interrupts
+	plp
+
+	LoadB PIA_PBCTL, %00110000                      ; no interrupts from PIA, PORTB as DDR
+	LoadB PIA_PORTB, %11111111                      ; all PORTB pins as output
+	LoadB PIA_PBCTL, %00110100                      ; no interrupts from PIA, PORTB as I/O
+	LoadB PIA_PORTB, %10110010                      ; only RAM, main RAM in $4000-$8000 for CPU (ANTIC irrelevant)
+
+	; stop all timers, and disable all (known) interrupts
+	LoadB PIA_PACTL, %00110000                      ; no interrupts from PIA, PORTA as DDR
+	LoadB PIA_PORTA, %00000000                      ; all PORTA pins as input
+	LoadB PIA_PACTL, %00110100                      ; no interrupts from PIA, PORTA as I/O (joystick I/O)
+
+	LoadB POKEY_SKCTL, %00000011                    ; reset serial, init keyboard scan
+
+	; displaylist address (display list defines screen position at SCREEN_BASE)
+	LoadW ANTIC_DLISTL, displaylist
+	LoadB ANTIC_HSCROL, 0
+	sta ANTIC_VSCROL
+
+	; init GTIA
+	ldx #0
+	txa
+:	sta GTIA,x
 	inx
+	cpx #32
+	bne :-
+
+	; set colors - atari default blue (but dark on light)
+	LoadB GTIA_COLPF1, $94
+	LoadB GTIA_COLPF2, $9a
+	LoadB GTIA_COLBK, 0
+
+	; P/M graphics
+	LoadB ANTIC_PMBASE, >GEOS_PMBASE
+	LoadB ANTIC_DMACTL, %00111010           ; DL DMA, 1scanline PMG, P DMA, no M DMA, normal playfield
+	LoadB GTIA_GRACTL,  %00000010           ; don't latch joystick triggers, P DMA, no M DMA
+	LoadB GTIA_PRIOR,   %00000001           ; priority, pm0 then pm2, then playfield
+	LoadB GTIA_SIZEP0,  %00000000           ; no X stretch
+	sta GTIA_SIZEP1
+;	this is in FirstInit
+;	LoadB GTIA_COLPM0,  $3c                 ; hue/lum
+;	LoadB GTIA_COLPM1,  $c4                 ; hue/lum
+
+	ldx #0
 	stx KbdQueHead
 	stx KbdQueTail
-	stx cia1base+3
-	stx cia1base+15
-	stx cia2base+15
-.ifdef bsw128
-	PushB rcr
-	and #%11110000
-	ora #%00000111
-	sta rcr
-.endif
-	lda PALNTSCFLAG
-	beq @2
-	ldx #$80
-@2:
-.ifdef bsw128
-	PopB rcr
-.endif
-	stx cia1base+14
-	stx cia2base+14
-	lda cia2base
-	and #%00110000
-	ora #%00000101
-	sta cia2base
-	LoadB cia2base+2, $3f
-	LoadB cia1base+13, $7f
-	sta cia2base+13
-.ifdef bsw128
-	lda cia1base+13
-	lda cia2base+13
-.endif
-	LoadW r0, VIC_IniTbl
-.assert * - VIC_IniTbl_end - VIC_IniTbl < 256, error, "VIC_IniTbl must be < 256 bytes"
-	ldy #<(VIC_IniTbl_end - VIC_IniTbl)
-	jsr SetVICRegs
-.ifdef bsw128
-	jsr InitVDC
-	lda #0 ; monochrome mode
-	jsr SetColorMode
-.endif
-.if .defined(wheels) || .defined(removeToBASIC)
-	ldx #32
-@3:	lda KERNALVecTab-1,x
-	sta irqvec-1,x
 	dex
-	bne @3
-.elseif .defined(bsw128)
-	jsr $FF8A ; "RESTOR" CBM KERNAL call
-.else
-	jsr Init_KRNLVec
-.endif
-.ifndef bsw128
-	LoadB CPU_DATA, RAM_64K
-.endif
-ASSERT_NOT_BELOW_IO
-	jmp ResetMseRegion
+	stx KbdQueFlag
 
+	jmp ResetMseRegion

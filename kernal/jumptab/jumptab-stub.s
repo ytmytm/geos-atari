@@ -362,6 +362,7 @@
 
 .segment "jumptab"
 
+.assert *=$c100, error, "jump table must be at $c100"
 
 InterruptMain:
 	jmp _InterruptMain

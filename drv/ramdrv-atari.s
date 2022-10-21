@@ -47,6 +47,8 @@ z8b			= $8b			;($8b/$8c) - from kernal.inc
 .import atari_nbanks
 .import atari_banks
 
+.warning "ramdrv-atari.s - read/write unimplemented, t&s unimplemented, bam code and offsets not checked"
+
 .segment "drive"
 
 ;-------------------------------------------------

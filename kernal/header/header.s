@@ -21,7 +21,7 @@
 
 .segment "header"
 
-; XXX!!! .assert * = $C000, error, "Header not at $C000"
+.assert * = $C000, error, "Header not at $C000"
 
 BootGEOS:
 .if .defined(wheels_remove_BootGEOS) || .defined(atari)

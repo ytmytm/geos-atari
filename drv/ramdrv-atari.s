@@ -51,6 +51,8 @@ z8b			= $8b			;($8b/$8c) - from kernal.inc
 
 .segment "drive"
 
+.assert * = $9000, error, "Disk driver not at $9000"
+
 ;-------------------------------------------------
 _InitForIO:		.word __InitForIO		;9000
 _DoneWithIO:		.word __DoneWithIO		;9002

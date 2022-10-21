@@ -9,6 +9,8 @@
 
 .segment "inputdrv"
 
+.assert * = $FE80, error, "Input driver not at $C000"
+
 MouseInit:
 	jmp _MouseInit
 SlowMouse:

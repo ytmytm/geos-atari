@@ -30,7 +30,7 @@
 .import _GetNextChar
 
 ; process.s
-;.import _Sleep
+.import _Sleep
 .import _UnfreezeProcess
 .import _FreezeProcess
 .import _UnblockProcess
@@ -71,32 +71,32 @@
 ;.import _RstrAppl
 
 ; filesys.s
-;.import _AppendRecord
-;.import _CloseRecordFile
-;.import _DeleteFile
-;.import _DeleteRecord
-;.import _FastDelFile
-;.import _FindFTypes
-;.import _FindFile
-;.import _FollowChain
-;.import _FreeFile
-;.import _GetFHdrInfo
-;.import _GetPtrCurDkNm
-;.import _InsertRecord
-;.import _NextRecord
-;.import _OpenRecordFile
-;.import _PointRecord
-;.import _PreviousRecord
-;.import _ReadByte
-;.import _ReadFile
-;.import _ReadRecord
-;.import _RenameFile
-;.import _SaveFile
-;.import _SetDevice
+.import _AppendRecord
+.import _CloseRecordFile
+.import _DeleteFile
+.import _DeleteRecord
+.import _FastDelFile
+.import _FindFTypes
+.import _FindFile
+.import _FollowChain
+.import _FreeFile
+.import _GetFHdrInfo
+.import _GetPtrCurDkNm
+.import _InsertRecord
+.import _NextRecord
+.import _OpenRecordFile
+.import _PointRecord
+.import _PreviousRecord
+.import _ReadByte
+.import _ReadFile
+.import _ReadRecord
+.import _RenameFile
+.import _SaveFile
+.import _SetDevice
 .import _SetGDirEntry
-;.import _UpdateRecordFile
+.import _UpdateRecordFile
 .import _WriteFile
-;.import _WriteRecord
+.import _WriteRecord
 
 ; memory.s
 .import _CmpFString
@@ -253,7 +253,7 @@
 .global DoPreviousMenu
 .global ReDoMenu
 .global GetSerialNumber
-;.global Sleep
+.global Sleep
 .global ClearMouseMode
 .global i_Rectangle
 .global i_FrameRectangle
@@ -281,17 +281,17 @@
 .global GetBlock
 .global PutBlock
 .global SetGEOSDisk
-;.global SaveFile
+.global SaveFile
 .global SetGDirEntry
 .global BldGDirEntry
 .global GetFreeDirBlk
 .global WriteFile
 .global BlkAlloc
-;.global ReadFile
+.global ReadFile
 .global SmallPutChar
-;.global FollowChain
+.global FollowChain
 ;.global GetFile
-;.global FindFile
+.global FindFile
 .global CRC
 ;.global LdFile
 .global EnterTurbo
@@ -300,24 +300,24 @@
 ;.global LdApplic
 .global WriteBlock
 .global VerWriteBlock
-;.global FreeFile
-;.global GetFHdrInfo
+.global FreeFile
+.global GetFHdrInfo
 ;.global EnterDeskTop
 ;.global StartAppl
 .global ExitTurbo
 .global PurgeTurbo
-;.global DeleteFile
-;.global FindFTypes
+.global DeleteFile
+.global FindFTypes
 ;.global RstrAppl
 .global ToBASIC
-;.global FastDelFile
+.global FastDelFile
 .global GetDirHead
 .global PutDirHead
 .global NxtBlkAlloc
 .global ImprintRectangle
 .global i_ImprintRectangle
 ;.global DoDlgBox
-;.global RenameFile
+.global RenameFile
 .global InitForIO
 .global DoneWithIO
 .global DShiftRight
@@ -326,19 +326,19 @@
 .global CmpString
 .global CmpFString
 .global FirstInit
-;.global OpenRecordFile
-;.global CloseRecordFile
-;.global NextRecord
-;.global PreviousRecord
-;.global PointRecord
-;.global DeleteRecord
-;.global InsertRecord
-;.global AppendRecord
-;.global ReadRecord
-;.global WriteRecord
+.global OpenRecordFile
+.global CloseRecordFile
+.global NextRecord
+.global PreviousRecord
+.global PointRecord
+.global DeleteRecord
+.global InsertRecord
+.global AppendRecord
+.global ReadRecord
+.global WriteRecord
 .global SetNextFree
-;.global UpdateRecordFile
-;.global GetPtrCurDkNm
+.global UpdateRecordFile
+.global GetPtrCurDkNm
 .global PromptOn
 .global PromptOff
 .global OpenDisk
@@ -346,9 +346,9 @@
 .global GetNextChar
 .global BitmapClip
 .global FindBAMBit
-;.global SetDevice
+.global SetDevice
 .global IsMseInRegion
-;.global ReadByte
+.global ReadByte
 .global FreeBlock
 .global ChangeDiskDevice
 ;.global RstrFrmDialogue
@@ -466,8 +466,8 @@ ReDoMenu:
 	jmp _ReDoMenu
 GetSerialNumber:
 	jmp _GetSerialNumber
-;Sleep:
-;	jmp _Sleep
+Sleep:
+	jmp _Sleep
 ClearMouseMode:
 	jmp _ClearMouseMode
 i_Rectangle:
@@ -522,8 +522,8 @@ PutBlock:
 	jmp (_PutBlock)
 SetGEOSDisk:
 	jmp (_SetGEOSDisk)
-;SaveFile:
-;	jmp _SaveFile
+SaveFile:
+	jmp _SaveFile
 SetGDirEntry:
 	jmp _SetGDirEntry
 BldGDirEntry:
@@ -534,16 +534,16 @@ WriteFile:
 	jmp _WriteFile
 BlkAlloc:
 	jmp (_BlkAlloc)
-;ReadFile:
-;	jmp _ReadFile
+ReadFile:
+	jmp _ReadFile
 SmallPutChar:
 	jmp _SmallPutChar
-;FollowChain:
-;	jmp _FollowChain
+FollowChain:
+	jmp _FollowChain
 ;GetFile:
 ;	jmp _GetFile
-;FindFile:
-;	jmp _FindFile
+FindFile:
+	jmp _FindFile
 CRC:
 	jmp __CRC
 ;LdFile:
@@ -560,10 +560,10 @@ WriteBlock:
 	jmp (_WriteBlock)
 VerWriteBlock:
 	jmp (_VerWriteBlock)
-;FreeFile:
-;	jmp _FreeFile
-;GetFHdrInfo:
-;	jmp _GetFHdrInfo
+FreeFile:
+	jmp _FreeFile
+GetFHdrInfo:
+	jmp _GetFHdrInfo
 ;EnterDeskTop:
 ;	jmp _EnterDeskTop
 ;StartAppl:
@@ -572,16 +572,16 @@ ExitTurbo:
 	jmp (_ExitTurbo)
 PurgeTurbo:
 	jmp (_PurgeTurbo)
-;DeleteFile:
-;	jmp _DeleteFile
-;FindFTypes:
-;	jmp _FindFTypes
+DeleteFile:
+	jmp _DeleteFile
+FindFTypes:
+	jmp _FindFTypes
 ;RstrAppl:
 ;	jmp _RstrAppl
 ToBASIC:
 	jmp _ToBASIC
-;FastDelFile:
-;	jmp _FastDelFile
+FastDelFile:
+	jmp _FastDelFile
 GetDirHead:
 	jmp (_GetDirHead)
 PutDirHead:
@@ -594,8 +594,8 @@ i_ImprintRectangle:
 	jmp _i_ImprintRectangle
 ;DoDlgBox:
 ;	jmp _DoDlgBox
-;RenameFile:
-;	jmp _RenameFile
+RenameFile:
+	jmp _RenameFile
 InitForIO:
 	jmp (_InitForIO)
 DoneWithIO:
@@ -612,32 +612,32 @@ CmpFString:
 	jmp _CmpFString
 FirstInit:
 	jmp _FirstInit
-;OpenRecordFile:
-;	jmp _OpenRecordFile
-;CloseRecordFile:
-;	jmp _CloseRecordFile
-;NextRecord:
-;	jmp _NextRecord
-;PreviousRecord:
-;	jmp _PreviousRecord
-;PointRecord:
-;	jmp _PointRecord
-;DeleteRecord:
-;	jmp _DeleteRecord
-;InsertRecord:
-;	jmp _InsertRecord
-;AppendRecord:
-;	jmp _AppendRecord
-;ReadRecord:
-;	jmp _ReadRecord
-;WriteRecord:
-;	jmp _WriteRecord
+OpenRecordFile:
+	jmp _OpenRecordFile
+CloseRecordFile:
+	jmp _CloseRecordFile
+NextRecord:
+	jmp _NextRecord
+PreviousRecord:
+	jmp _PreviousRecord
+PointRecord:
+	jmp _PointRecord
+DeleteRecord:
+	jmp _DeleteRecord
+InsertRecord:
+	jmp _InsertRecord
+AppendRecord:
+	jmp _AppendRecord
+ReadRecord:
+	jmp _ReadRecord
+WriteRecord:
+	jmp _WriteRecord
 SetNextFree:
 	jmp (_SetNextFree)
-;UpdateRecordFile:
-;	jmp _UpdateRecordFile
-;GetPtrCurDkNm:
-;	jmp _GetPtrCurDkNm
+UpdateRecordFile:
+	jmp _UpdateRecordFile
+GetPtrCurDkNm:
+	jmp _GetPtrCurDkNm
 PromptOn:
 	jmp _PromptOn
 PromptOff:
@@ -652,12 +652,12 @@ BitmapClip:
 	jmp _BitmapClip
 FindBAMBit:
 	jmp (_FindBAMBit)
-;SetDevice:
-;	jmp _SetDevice
+SetDevice:
+	jmp _SetDevice
 IsMseInRegion:
 	jmp __IsMseInRegion
-;ReadByte:
-;	jmp _ReadByte
+ReadByte:
+	jmp _ReadByte
 FreeBlock:
 	jmp (_FreeBlock)
 ChangeDiskDevice:

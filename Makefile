@@ -186,6 +186,7 @@ KERNAL_SOURCES = \
 	kernal/files/files7.s \
 	kernal/files/files8.s \
 	kernal/files/files9.s \
+	kernal/files/files10.s \
 	kernal/fonts/fonts1.s \
 	kernal/fonts/fonts2.s \
 	kernal/fonts/fonts3.s \

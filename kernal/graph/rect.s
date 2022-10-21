@@ -49,8 +49,9 @@ _RecoverRectangle:
 	sta dispBufferOn
 	jsr PrepareXCoord
 	PopB dispBufferOn
-	ldy #%01000000
+	ldy #%01000000				; bit 6 = OP call recover line
 	bne DoRectangleLoop
+
 _ImprintRectangle:
 	PushB r2L
 	sta r11L
@@ -62,7 +63,7 @@ _ImprintRectangle:
 	sta dispBufferOn
 	jsr PrepareXCoord
 	PopB dispBufferOn
-	lda r5L
+	lda r5L					; imprint is recover with source<->destination swapped
 	ldy r6L
 	sta r6L
 	sty r5L
@@ -70,13 +71,15 @@ _ImprintRectangle:
 	ldy r6H
 	sta r6H
 	sty r5H
-	ldy #%01000000
+	ldy #%01000000				; bit 6 = OP call recover line
 	bne DoRectangleLoop
+
 _Rectangle:
-	ldy #0
+	ldy #0					; zero  = OP call horizontal line
 	beq _DoRectangle
+
 _InvertRectangle:
-	ldy #%10000000
+	ldy #%10000000				; bit 7 = OP call invert line
 ;	bne _DoRectangle
 
 _DoRectangle:
@@ -87,27 +90,31 @@ _DoRectangle:
 	PushW r4
 	jsr PrepareXCoord
 
-DoRectangleLoop:
-	lda r11L
+DoRectangleLoop:				; all rectangle functions call horizontal line drawing
+	lda r2L
+	beq @hor
+	bmi @inv
+;	bvs @rec				; fall into recover if not 0 and not bit 7
+;	bra @cont
+
+@rec:	jsr __RecoverLineDo			; call one of internal line routines to avoid recalculation of coordinates
+	bra @cont
+
+@hor:	lda r11L				; only Rectangle needs pattern update
 	and #%00000111
 	tay
 	lda (curPattern),Y
 	sta r7L
-	lda r2L
-	beq @hor
-	bmi @inv
-;	bvs @rec
-;	bra @cont
-@rec:	jsr __RecoverLineDo
+	jsr __HorizontalLineDo
 	bra @cont
-@hor:	jsr __HorizontalLineDo
-	bra @cont
+
 @inv:	jsr __InvertLineDo
+
 @cont:	lda r11L
-	cmp r2H
+	cmp r2H					; all lines done?
 	beq @end
-	inc r11L
-	lda #SC_BYTE_WIDTH
+	inc r11L				; next line
+	lda #SC_BYTE_WIDTH			; next row
 	add r5L
 	sta r5L
 	sta r6L

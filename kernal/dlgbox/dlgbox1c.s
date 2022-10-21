@@ -8,7 +8,6 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
 
 .import DialogRestore
 .import dlgBoxCallerPC
@@ -17,7 +16,6 @@
 .import defIconTab
 .import DialogSave
 .import InitGEOEnv
-.import L8871
 
 .import FrameRectangle
 .import Rectangle
@@ -32,7 +30,6 @@
 .segment "dlgbox1c"
 
 DlgBoxPrep:
-.ifdef wheels_size ; Dialog_2 was folded into this
 	sec
 	jsr DlgBoxPrep2
 	LoadB sysDBData, NULL
@@ -41,27 +38,10 @@ DlgBoxPrep:
 Dialog_2:
 	clc
 DlgBoxPrep2:
-	START_IO
 	LoadW r4, dlgBoxRamBuf
-	bcc @1
-	jsr DialogSave
-	LoadB mobenble, 1
-	bne @2
-@1:	jsr DialogRestore
-@2:	END_IO
-	rts
-.else
-	START_IO_128
-	START_IO
-	LoadW r4, dlgBoxRamBuf
-	jsr DialogSave
-	LoadB mobenble, 1
-	END_IO_128
-	END_IO
-	jsr InitGEOEnv
-	LoadB sysDBData, NULL
-	rts
-.endif
+	bcc :+
+	jmp DialogSave
+:	jmp DialogRestore
 
 DrawDlgBox:
 	LoadB dispBufferOn, ST_WR_FORE | ST_WRGS_FORE
@@ -121,11 +101,6 @@ DrwDlgSpd1:
 	jsr SetPattern
 	sec
 	jsr CalcDialogCoords
-.ifdef bsw128
-	lda r3H
-	and #$80
-	sta L8871
-.endif
 	jsr Rectangle
 .endif
 @1:	lda #0
@@ -134,18 +109,10 @@ DrwDlgSpd1:
 	jsr CalcDialogCoords
 	MoveW r4, rightMargin
 	jsr Rectangle
-.ifndef wheels_size_and_speed ; redundant
-	clc
-	jsr CalcDialogCoords
-.endif
 	lda #$ff
 	jsr FrameRectangle
 	lda #0
 	sta defIconTab
-.ifndef wheels_size_and_speed ; single 0 = no icons
-	sta defIconTab+1
-	sta defIconTab+2
-.endif
 	rts
 
 Dialog_1:
@@ -201,15 +168,10 @@ CalcDialogCoords:
 	rts
 
 DBDefinedPos:
-.ifdef bsw128
-MSB = DOUBLE_W
-.else
-MSB = 0
-.endif
 	.byte DEF_DB_TOP
 	.byte DEF_DB_BOT
-	.word MSB | DEF_DB_LEFT
-	.word MSB | DEF_DB_RIGHT
+	.word DEF_DB_LEFT
+	.word DEF_DB_RIGHT
 
 _RstrFrmDialogue:
 	jsr Dialog_2
@@ -219,15 +181,4 @@ _RstrFrmDialogue:
 	txs
 	PushW dlgBoxCallerPC
 	rts
-
-.ifndef wheels_size ; folded into DlgBoxPrep
-Dialog_2:
-	START_IO_128
-	START_IO
-	LoadW r4, dlgBoxRamBuf
-	jsr DialogRestore
-	END_IO_128
-	END_IO
-	rts
-.endif
 

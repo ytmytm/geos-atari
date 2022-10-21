@@ -8,7 +8,6 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
 
 .import CalcIconDescTab
 .import defIconTab
@@ -88,7 +87,7 @@ DialogNextSaveRestoreEntry:
 
 ; pointer & length tuples of memory regions to save and restore
 .ifdef wheels_size_and_speed
-.define DialogCopyTab curPattern, appMain, IconDescVec, menuOptNumber, TimersTab, obj0Pointer, mob0xpos, mobenble, mobprior, mcmclr0, mob1clr, moby2
+.define DialogCopyTab curPattern, appMain, IconDescVec, menuOptNumber, TimersTab, obj0Pointer
 DialogCopyTab1:
 	.lobytes DialogCopyTab
 DialogCopyTab2:
@@ -100,12 +99,6 @@ DialogCopyTab3:
 	.byte 49
 	.byte 227
 	.byte 8
-	.byte 17
-	.byte 1
-	.byte 3
-	.byte 2
-	.byte 7
-	.byte 1
 	.byte NULL
 .else
 DialogCopyTab:
@@ -121,18 +114,6 @@ DialogCopyTab:
 	.byte 227
 	.word obj0Pointer
 	.byte 8
-	.word mob0xpos
-	.byte 17
-	.word mobenble
-	.byte 1
-	.word mobprior
-	.byte 3
-	.word mcmclr0
-	.byte 2
-	.word mob1clr
-	.byte 7
-	.word moby2
-	.byte 1
 	.word NULL
 .endif
 

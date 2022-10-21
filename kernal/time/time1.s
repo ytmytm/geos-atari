@@ -17,6 +17,8 @@
 
 .global _DoUpdateTime
 
+.warning "time1.s - This doesn't work for Atari"
+
 .segment "time1"
 
 _DoUpdateTime:

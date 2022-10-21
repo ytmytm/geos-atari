@@ -3,15 +3,10 @@
 ;
 ; C64/CIA clock driver
 
-.include "const.inc"
-.include "geossym.inc"
-.include "geosmac.inc"
-.include "config.inc"
-.include "kernal.inc"
-.include "c64.inc"
-
 .global pingTab
 .global pingTabEnd
+
+.warning "This doesn't work for Atari"
 
 .segment "time2"
 
@@ -22,11 +17,3 @@ pingTab:
 	.byte $0f
 pingTabEnd:
 
-.if (!.defined(remove_dead_bytes)) && (!.defined(bsw128))
-; ???
-.ifdef wheels
-	.word 0
-.else
-	.word $0f00
-.endif
-.endif

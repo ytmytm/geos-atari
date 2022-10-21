@@ -172,7 +172,17 @@ KERNAL_SOURCES = \
 	kernal/conio/conio4.s \
 	kernal/conio/conio5.s \
 	kernal/conio/conio6.s \
+	kernal/dlgbox/dlgbox1a.s \
+	kernal/dlgbox/dlgbox1b.s \
+	kernal/dlgbox/dlgbox1c.s \
+	kernal/dlgbox/dlgbox1d.s \
+	kernal/dlgbox/dlgbox1e1.s \
+	kernal/dlgbox/dlgbox1e2.s \
+	kernal/dlgbox/dlgbox1f.s \
+	kernal/dlgbox/dlgbox1g.s \
+	kernal/dlgbox/dlgbox1h.s \
 	kernal/dlgbox/dlgbox1i.s \
+	kernal/dlgbox/dlgbox1j.s \
 	kernal/dlgbox/dlgbox1k.s \
 	kernal/dlgbox/dlgbox2.s \
 	kernal/files/files1a2a.s \
@@ -218,8 +228,13 @@ KERNAL_SOURCES = \
 	kernal/keyboard/keyboard1.s \
 	kernal/keyboard/keyboard2.s \
 	kernal/keyboard/keyboard3.s \
+	kernal/load/deskacc.s \
+	kernal/load/load1a.s \
 	kernal/load/load1b.s \
 	kernal/load/load1c.s \
+	kernal/load/load2.s \
+	kernal/load/load3.s \
+	kernal/load/load4b.s \
 	kernal/mainloop/mainloop1.s \
 	kernal/mainloop/mainloop3.s \
 	kernal/math/shl.s \
@@ -254,6 +269,8 @@ KERNAL_SOURCES = \
 	kernal/serial/serial1.s \
 	kernal/serial/serial2.s \
 	kernal/sprites/sprites.s \
+	kernal/time/time1.s \
+	kernal/time/time2.s \
 	kernal/tobasic/tobasic2.s \
 	kernal/vars/vars.s
 endif

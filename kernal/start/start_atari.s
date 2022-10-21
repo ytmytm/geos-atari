@@ -49,6 +49,7 @@
 .import PosSprite
 .import EnablSprite
 .import DisablSprite
+.import _EnterDT_DB
 
 ; sprites_atari.s
 .import AtariPlayersInit
@@ -683,7 +684,7 @@ menuGeos:
 
 	.word mNothTxt
 	.byte MENU_ACTION
-	.word goRTS
+	.word goDlgBox
 
 menuFile:
 	.byte 15,30
@@ -706,6 +707,14 @@ menuFile:
 ;;;;
 goRTS:	jsr GotoFirstMenu
 rtsonly:rts
+
+goDlgBox:
+.import DoDlgBox
+	jsr GotoFirstMenu
+	LoadW r0, _EnterDT_DB
+	jsr DoDlgBox
+	rts
+
 goLoop:
 @loop:
 	.repeat 16, xx

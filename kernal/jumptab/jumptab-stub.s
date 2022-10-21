@@ -60,15 +60,15 @@
 ;.import _StashRAM
 
 ; dlgbox.s
-;.import _RstrFrmDialogue
-;.import _DoDlgBox
+.import _RstrFrmDialogue
+.import _DoDlgBox
 
 ; load.s
-;.import _GetFile
-;.import _LdApplic
-;.import _LdDeskAcc
-;.import _LdFile
-;.import _RstrAppl
+.import _GetFile
+.import _LdApplic
+.import _LdDeskAcc
+.import _LdFile
+.import _RstrAppl
 
 ; filesys.s
 .import _AppendRecord
@@ -137,8 +137,8 @@
 .import _ToBASIC
 
 ; main.s
-;.import _StartAppl
-;.import _EnterDeskTop
+.import _StartAppl
+.import _EnterDeskTop
 .import _MainLoop
 .import _InterruptMain
 
@@ -290,25 +290,25 @@
 .global ReadFile
 .global SmallPutChar
 .global FollowChain
-;.global GetFile
+.global GetFile
 .global FindFile
 .global CRC
-;.global LdFile
+.global LdFile
 .global EnterTurbo
-;.global LdDeskAcc
+.global LdDeskAcc
 .global ReadBlock
-;.global LdApplic
+.global LdApplic
 .global WriteBlock
 .global VerWriteBlock
 .global FreeFile
 .global GetFHdrInfo
-;.global EnterDeskTop
-;.global StartAppl
+.global EnterDeskTop
+.global StartAppl
 .global ExitTurbo
 .global PurgeTurbo
 .global DeleteFile
 .global FindFTypes
-;.global RstrAppl
+.global RstrAppl
 .global ToBASIC
 .global FastDelFile
 .global GetDirHead
@@ -316,7 +316,7 @@
 .global NxtBlkAlloc
 .global ImprintRectangle
 .global i_ImprintRectangle
-;.global DoDlgBox
+.global DoDlgBox
 .global RenameFile
 .global InitForIO
 .global DoneWithIO
@@ -351,7 +351,7 @@
 .global ReadByte
 .global FreeBlock
 .global ChangeDiskDevice
-;.global RstrFrmDialogue
+.global RstrFrmDialogue
 ;.global Panic
 .global BitOtherClip
 .global StashRAM
@@ -540,22 +540,22 @@ SmallPutChar:
 	jmp _SmallPutChar
 FollowChain:
 	jmp _FollowChain
-;GetFile:
-;	jmp _GetFile
+GetFile:
+	jmp _GetFile
 FindFile:
 	jmp _FindFile
 CRC:
 	jmp __CRC
-;LdFile:
-;	jmp _LdFile
+LdFile:
+	jmp _LdFile
 EnterTurbo:
 	jmp (_EnterTurbo)
-;LdDeskAcc:
-;	jmp _LdDeskAcc
+LdDeskAcc:
+	jmp _LdDeskAcc
 ReadBlock:
 	jmp (_ReadBlock)
-;LdApplic:
-;	jmp _LdApplic
+LdApplic:
+	jmp _LdApplic
 WriteBlock:
 	jmp (_WriteBlock)
 VerWriteBlock:
@@ -564,10 +564,10 @@ FreeFile:
 	jmp _FreeFile
 GetFHdrInfo:
 	jmp _GetFHdrInfo
-;EnterDeskTop:
-;	jmp _EnterDeskTop
-;StartAppl:
-;	jmp _StartAppl
+EnterDeskTop:
+	jmp _EnterDeskTop
+StartAppl:
+	jmp _StartAppl
 ExitTurbo:
 	jmp (_ExitTurbo)
 PurgeTurbo:
@@ -576,8 +576,8 @@ DeleteFile:
 	jmp _DeleteFile
 FindFTypes:
 	jmp _FindFTypes
-;RstrAppl:
-;	jmp _RstrAppl
+RstrAppl:
+	jmp _RstrAppl
 ToBASIC:
 	jmp _ToBASIC
 FastDelFile:
@@ -592,8 +592,8 @@ ImprintRectangle:
 	jmp _ImprintRectangle
 i_ImprintRectangle:
 	jmp _i_ImprintRectangle
-;DoDlgBox:
-;	jmp _DoDlgBox
+DoDlgBox:
+	jmp _DoDlgBox
 RenameFile:
 	jmp _RenameFile
 InitForIO:
@@ -662,24 +662,12 @@ FreeBlock:
 	jmp (_FreeBlock)
 ChangeDiskDevice:
 	jmp (_ChangeDiskDevice)
-;RstrFrmDialogue:
-;	jmp _RstrFrmDialogue
+RstrFrmDialogue:
+	jmp _RstrFrmDialogue
 ;Panic:
 ;	jmp _Panic
 BitOtherClip:
 	jmp _BitOtherClip
-.ifdef REUPresent
-StashRAM:
-	jmp _StashRAM
-FetchRAM:
-	jmp _FetchRAM
-SwapRAM:
-	jmp _SwapRAM
-VerifyRAM:
-	jmp _VerifyRAM
-DoRAMOp:
-	jmp _DoRAMOp
-.else
 StashRAM:
 	ldx #DEV_NOT_FOUND
 	rts
@@ -695,4 +683,3 @@ VerifyRAM:
 DoRAMOp:
 	ldx #DEV_NOT_FOUND
 	rts
-.endif

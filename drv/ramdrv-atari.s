@@ -458,7 +458,7 @@ __PutBlock:	JSR InitForIO
 		JMP DoneWithIO
 ;---------------------------------------
 __GetDirHead:	JSR SetDirHead
-		BNE __GetBlock
+		bra __GetBlock
 _ReadBuff:	JSR SetBufVector
 __GetBlock:	JSR InitForIO
 		JSR ReadBlock

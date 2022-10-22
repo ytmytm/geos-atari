@@ -855,6 +855,8 @@ newRAMDlgBox:
 
 oldDiskL0:
 	.byte "Found RAM Disk. Format anyway?",0
+reformatDiskL0:
+	.byte "Formatting again.",0
 
 newDiskL0:
 	.byte "No GEOS RAM Disk found.",0
@@ -905,12 +907,15 @@ testDiskOps:
 	LoadW r0, formatDlgBox
 	jsr DoDlgBox
 	CmpBI sysDBData, YES
-	beq @notGEOS
+	beq @reformat
 	rts
 
+@reformat:
+	LoadW a0, reformatDiskL0
+	bra :+
 @notGEOS:
 	LoadW a0, newDiskL0
-	LoadW a1, newDiskL1
+:	LoadW a1, newDiskL1
 	LoadW r0, newRAMDlgBox
 	jsr DoDlgBox
 	jsr createDirHead

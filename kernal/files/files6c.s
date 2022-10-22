@@ -27,6 +27,8 @@
 .global _GetFHdrInfo
 .global _FindFile
 
+.warning "files6c - SetDevice unimplemented"
+
 .segment "files6c"
 
 _FindFile:

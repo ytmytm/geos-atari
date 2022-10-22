@@ -47,7 +47,7 @@ InitRamTab:
 	.word 0                       ; otherPressVec
 	.word 0                       ; StringFaultVec
 	.word 0                       ; alarmTmtVector
-	.word 0 ;_Panic                  ; BRKVector	; XXX should _Panic on BRK
+	.word _Panic                  ; BRKVector	; _Panic on BRK
 	.word _RecoverRectangle       ; RecoverVector
 	.byte SelectFlashDelay        ; selectionFlash
 	.byte 0                       ; alphaFlag

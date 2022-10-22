@@ -43,7 +43,7 @@ _IRQHandler:
 	pha
 	and #%00010000				; was that BRK?
 	beq :+
-;	pla					; why they (BSW) put it here? without it BRKVector can return with RTI (providing there is a NOP after BRK)
+	pla					; why they (BSW) put it here? with that - Panic shows correct address, but without it BRKVector can return with simple RTI to caller (providing there is a NOP after BRK)
 	jmp (BRKVector)
 :	lda POKEY_IRQST				; was that break/keyboard irq? (bit=0 means 'yes')
 	sta tmpPOKEY_IRQST

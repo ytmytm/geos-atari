@@ -9,17 +9,15 @@
 .include "config.inc"
 .include "kernal.inc"
 
-.warning "panic1.s - untested (directly nor via BRK)"
-
-.segment "panic1"
 
 .import DoDlgBox
-.import Ddec
 .import EnterDeskTop
+.import ToBASIC
 
 ; syscall
 .global _Panic
 
+.segment "panic1"
 ;---------------------------------------------------------------
 ; Panic                                                   $C2C2
 ;
@@ -36,7 +34,8 @@ _Panic:
 	jsr hex2digit
 	LoadW r0, _PanicDB_DT
 	jsr DoDlgBox
-	jmp EnterDeskTop
+	jmp ToBASIC
+	;jmp EnterDeskTop
 
 hex2digit:
 	pha
@@ -67,6 +66,7 @@ _PanicDB_DT:
 	.byte DEF_DB_POS | 1
 	.byte DBTXTSTR, TXT_LN_X, TXT_LN_1_Y
 	.word _PanicDB_Str
+	.byte OK, DBI_X_2, DBI_Y_2
 	.byte NULL
 
 .segment "panic3"
@@ -74,7 +74,6 @@ _PanicDB_DT:
 _PanicDB_Str:
 	.byte BOLDON
 	.byte "Error near "
-	.byte "System error near "
 	.byte "$"
 _PanicAddr:
 	.byte "xxxx"

@@ -257,6 +257,7 @@ KERNAL_SOURCES = \
 	kernal/mouse/mouse3.s \
 	kernal/mouse/mouse4.s \
 	kernal/mouse/mouseptr.s \
+	kernal/panic/panic.s \
 	kernal/patterns/patterns.s \
 	kernal/process/process1.s \
 	kernal/process/process2.s \

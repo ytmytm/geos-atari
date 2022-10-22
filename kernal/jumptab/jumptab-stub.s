@@ -147,7 +147,7 @@
 .import _DoInlineReturn
 
 ; panic.s
-;.import _Panic
+.import _Panic
 
 ; serial.s
 .import _GetSerialNumber
@@ -352,7 +352,7 @@
 .global FreeBlock
 .global ChangeDiskDevice
 .global RstrFrmDialogue
-;.global Panic
+.global Panic
 .global BitOtherClip
 .global StashRAM
 .global FetchRAM
@@ -664,8 +664,8 @@ ChangeDiskDevice:
 	jmp (_ChangeDiskDevice)
 RstrFrmDialogue:
 	jmp _RstrFrmDialogue
-;Panic:
-;	jmp _Panic
+Panic:
+	jmp _Panic
 BitOtherClip:
 	jmp _BitOtherClip
 StashRAM:

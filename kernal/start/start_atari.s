@@ -252,7 +252,7 @@ _ResetHandle:
 	jsr InitGEOEnv
 
 	; XXX this needs to stay here until DoDlgBox is ready to be Panic() call
-	LoadW BRKVector, _BRKHandler	; InitRam would make this Panic, but we don't have Panic yet
+	;LoadW BRKVector, _BRKHandler	; InitRam would make this Panic, but we don't have Panic yet
 
 ;	cli	; firstinit does sei, but MainLoop or DoneWithIO do cli anyway
 
@@ -269,7 +269,7 @@ _ResetHandle:
 	.word 0   ; x1
 	.word 160 ; x2
 
-	LoadB dispBufferOn, ST_WR_FORE
+	LoadB dispBufferOn, ST_WR_FORE | ST_WR_BACK
 
 	lda #3
 	jsr SetPattern
@@ -608,6 +608,12 @@ jmp @n
 .import DoIcons
 	LoadW r0, iconDesc
 	jsr DoIcons
+
+; Panic
+.import Panic
+	;jsr Panic
+	;brk
+	nop
 
 ; DoMenu
 

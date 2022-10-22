@@ -36,6 +36,8 @@
 .global _EnterDeskTop
 .global _StartAppl
 
+.warning "load1a.s - EnterDeskTop hangs instead of infinite loop w/ dlgbox"
+
 .segment "load1a"
 
 _EnterDeskTop:

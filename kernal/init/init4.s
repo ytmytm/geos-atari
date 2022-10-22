@@ -8,9 +8,6 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-;.include "c64.inc"
-
-.warning "init4-atari.s should panic on BRK"
 
 .import NumTimers
 .import _Panic

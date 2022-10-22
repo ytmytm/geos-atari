@@ -10,13 +10,11 @@
 .include "kernal.inc"
 .include "atari.inc"
 
-.warning "init2.s needs EnterDesktop"
-
 .import InitMsePic
-;.import _EnterDeskTop
+.import _EnterDeskTop
 .import _InitMachine
 
-;.import EnterDeskTop
+.import EnterDeskTop
 
 .global _FirstInit
 
@@ -35,7 +33,7 @@ _FirstInit:
 	sei
 	cld
 	jsr _InitMachine
-;	LoadW EnterDeskTop+1, _EnterDeskTop
+	LoadW EnterDeskTop+1, _EnterDeskTop
 	LoadB maxMouseSpeed, iniMaxMouseSpeed
 	LoadB minMouseSpeed, iniMinMouseSpeed
 	LoadB mouseAccel, iniMouseAccel

@@ -664,13 +664,13 @@ menuDesc:
 mGeosTxt: .byte "geos",0
 mFileTxt: .byte "file",0
 mQuitTxt: .byte "quit",0
-mAboutTxt: .byte "about",0
-mNothTxt: .byte "nothing",0
-mNot2Txt: .byte "not2",0
+mAboutTxt: .byte "loop",0
+mNothTxt: .byte "DlgBox",0
+mNot2Txt: .byte "Desktop",0
 
 menuGeos:
 	.byte 15,15+2*15-1
-	.word 8,52 ;; 56-1 byloby ok
+	.word 8,52 
 	.byte 2 | VERTICAL
 
 	.word mAboutTxt
@@ -683,25 +683,21 @@ menuGeos:
 
 menuFile:
 	.byte 15,30
-	.word 42,80;40,79
+	.word 42,80
 	.byte 1 | VERTICAL
 
 	.word mNot2Txt
 	.byte MENU_ACTION
-	.word goRTS
-
-; L:
-; 40 = ok z lewej
-; 41-47 = zostaje lewa
-; 48 = ok
-
-; R:
-; 79 = ok
-; 80 = zostaje prawa
+	.word goDeskTOP
 
 ;;;;
 goRTS:	jsr GotoFirstMenu
 rtsonly:rts
+
+.import EnterDeskTop
+goDeskTOP:
+	jsr GotoFirstMenu
+	jmp EnterDeskTop
 
 goDlgBox:
 .import DoDlgBox

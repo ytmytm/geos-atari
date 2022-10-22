@@ -85,9 +85,6 @@
 .import __KERNALRELOCH_START__
 .import __KERNALRELOCH_LAST__
 .import __KERNALH_START__
-.import __KERNALRELOCIO_START__
-.import __KERNALRELOCIO_LAST__
-.import __KERNALIO_START__
 .import __INPUTDRVRELOC_START__
 .import __INPUTDRVRELOC_LAST__
 .import __INPUTDRV_START__
@@ -144,19 +141,7 @@ relocate:
 	inc r1H
 	dex
 	bpl :-
-	; $D800-$DBFF
-	LoadW r0, __KERNALRELOCIO_START__
-	LoadW r1, __KERNALIO_START__
-	ldx #>(__KERNALRELOCIO_LAST__ - __KERNALRELOCIO_START__)
-:	lda (r0),y
-	sta (r1),y
-	iny
-	bne :-
-	inc r0H
-	inc r1H
-	dex
-	bpl :-
-	; $E000-$FE7F ($D800-$DFFF can't be used - it's color RAM on C64 and apps can touch it)
+	; $D800-$FE7F
 	LoadW r0, __KERNALRELOCH_START__
 	LoadW r1, __KERNALH_START__
 	ldx #>(__KERNALRELOCH_LAST__ - __KERNALRELOCH_START__)

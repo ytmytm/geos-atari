@@ -221,5 +221,3 @@ L5086:	PushW r9
 	rts
 .endif
 
-ASSERT_NOT_BELOW_IO
-

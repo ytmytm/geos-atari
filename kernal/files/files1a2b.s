@@ -28,8 +28,6 @@
 
 .segment "files1a2b"
 
-ASSERT_NOT_BELOW_IO
-
 .ifdef wheels_external_readwrite_file
 OReadFile:
 .else

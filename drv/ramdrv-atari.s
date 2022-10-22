@@ -6,36 +6,28 @@
 ; Maciej Witkowiak, 2022
 
 ; Atari layout:
-; 1 track per bank = 64 sectors per track
-; at least 3 tracks, track 0 doesn't exist (first bank reserved for GEOS Kernal)
-; up to 64 tracks
+; track 0 doesn't exist (end of t&s chain marker)
+; 128 sectors per track, starting with bank 1, bank0 (16K) reserved for OS
+; (1,0) - dirHead, inside there would be a marker if dir2Head / dir3Head are needed
+; 128KB (130XE) =  3 banks 16K =  48K =  $C0 pages = track 1 (0-$7F) + track2 (0-$3F), BAM for 24 bytes in dirHead
+; 320KB         = 15 banks 16K = 240K = $3C0 pages = 7 tracks (1-8)  + track9 (0-$3F), BAM for 120 bytes in dirHead (space for 140)
+; 1MB (optional, unsupported)
 
-; read/write
-; - use z8b to vector inside ATARI_EXPBASE
+; XXX there is no check for max track/sector in BAM ops
+;     (so you can't format a disk by freeing all tracks & sectors until error)
+; XXX there is no check/support for >320K expansions
+;     (no curDir2Head/curDir3Head)
 
-;$0000		- boot up ($100)
-;$0100		- dir head1 (name & compressed BAM or name&dirtrackBAM)
-;		  1) $04-$48/$88 - BAM (128/256K), $c0/$c1 - dirtrackBAM
-;		  2) 				   $c0...  - dirtrackBAM
+RAM_DIR_TRACK		= 1
+RAM_DIR_SECT_HEAD	= 0
 
-;constant defines (high bytes only)
-dirHeadPos		= $01
-dirLength		= $04			;up to 15 (+1 for header)
-						;if more - change AddDirBlock
+; BAM in curDirHead (Atari 130XE/320K)
+BAMLength		= 128-8			; bank 0 skipped over
 
-;should be exported
-driverSpace	= dirHeadPos+dirLength+1;start of swapspace
-driverSwapLgh	= $05			;length of swapspace
-
-diskStart		= driverSpace+driverSwapLgh
-; if any changes above - change SetRAMCBam
-
-MAXBLK		= 512-diskStart	; this will not be fixed
-BAMLength		= 64			;total, first few reserved on bootup
-						;(last sector ever reserved as border-dir)
-OFF_TO_DIRBAM		= $c0			;BAM of DIR_TRACK
-
+; vector for bank data exchange
 z8b			= $8b			;($8b/$8c) - from kernal.inc
+z8bL			= z8b
+z8bH			= z8b+1
 
 .include "inc/const.inc"
 .include "inc/jumptab.inc"
@@ -46,12 +38,13 @@ z8b			= $8b			;($8b/$8c) - from kernal.inc
 ; GEOS will fill those in
 .import atari_nbanks
 .import atari_banks
-
-.warning "ramdrv-atari.s - read/write unimplemented, t&s unimplemented, bam code and offsets not checked"
+.import interrupt_lock
 
 .segment "drive"
 
 .assert * = $9000, error, "Disk driver not at $9000"
+
+.assert OFF_TO_BAM+BAMLength < OFF_DISK_NAME, error, "BAM overlaps disk name in disk header"
 
 ;-------------------------------------------------
 _InitForIO:		.word __InitForIO		;9000
@@ -92,8 +85,7 @@ ReadLink:		JMP _ReadLink			;904b
 
 ;---------------------------------------
 _Get1stDirEntry:
-		LoadB r1L, DIR_TRACK
-		LoadB r1H, 1
+		MoveW curDirHead, r1			; get t&s from directory header
 		JSR ReadBuff
 		LoadW r5, diskBlkBuf+FRST_FILE_ENTRY
 		LoadB borderFlag, 0
@@ -104,22 +96,22 @@ _GetNxtDirEntry:
 		LDX #0
 		LDY #0
 		AddVW OFF_NXT_FILE, r5
-		CmpWI r5, diskBlkBuf+$ff		; overflow?
-		BCC GNDirEntry1
+		CmpWI r5, diskBlkBuf+$ff
+		BCC @end				; overflow?
 		LDY #$ff
 		MoveW diskBlkBuf, r1
-		BNE GNDirEntry0
+		BNE @readsect
 		LDA borderFlag
-		BNE GNDirEntry1
+		BNE @end
 		LoadB borderFlag, $ff
 		JSR GetBorder
-		bnex GNDirEntry1
+		bnex @end
 		TYA
-		BNE GNDirEntry1
-GNDirEntry0:	JSR ReadBuff
+		BNE @end
+@readsect:	JSR ReadBuff
 		LDY #0
 		LoadW r5, diskBlkBuf+FRST_FILE_ENTRY
-GNDirEntry1:	RTS
+@end:		RTS
 
 ;---------------------------------------
 _GetBorder:
@@ -146,23 +138,30 @@ ClearAndWrite:	LDA #0
 		JMP WriteBuff
 
 ;---------------------------------------
-;---------------------------------------
 __CalcBlksFree:
 		LoadW r4, 0
+		STA r3L				; also clear low byte of total number of blocks
 		LDY #OFF_TO_BAM
-CBlksFre0:	LDA (r5),y
-		BEQ CBlksFre3
+@loop:		LDA (r5),y
+		BEQ @nxt			; fully occupied
 		LDX #0
-CBlksFre1:	LSR
-		BCC CBlksFre2
+:		LSR				; sum bits
+		BCC :+
 		IncW r4
-CBlksFre2:	INX
+:		INX
 		CPX #8
-		BNE CBlksFre1
-CBlksFre3:	INY
+		BNE :--
+@nxt:		INY
 		CPY #BAMLength+OFF_TO_BAM
-		BNE CBlksFre0
-		LoadW r3, MAXBLK
+		BNE @loop
+		; total number of blocks
+		LDY atari_nbanks
+		DEY				; bank 0 occupied by OS
+		STY r3H				; * 256
+		ASL r3H
+		ROL r3L				; /2
+		ASL r3H
+		ROL r3L				; /2 -> *256/4 -> *64 pages
 		RTS
 
 ;---------------------------------------
@@ -231,27 +230,32 @@ FreeBlk0:	LDX #BAD_BAM
 
 ;---------------------------------------
 __FindBAMBit:
-		LDA r6L
-		TAX
-		DEX
-		TXA
-		ASL
-		ASL
-		ASL
-		ASL
-		STA r7H
+		PushW r6
+; there is no track 0
+		DEC r6L
+; convert to page address (note reversed L/H) - bring 1st bit of L into last bit of H
+		ASL r6H
+		LSR r6L
+		ROR r6H
+		; get bit number
 		LDA r6H
 		AND #%00000111
 		TAX
 		LDA FBBBitTab,x
 		STA r8H
+		; divide page number by 8 (reversed L/H)
+		LSR r6L
+		ROR r6H
+		LSR r6L
+		ROR r6H
+		LSR r6L
+		ROR r6H
 		LDA r6H
-		LSR
-		LSR
-		LSR
-		add r7H
+		STA r7H				; offset inside BAM
+		CLC
 		ADC #OFF_TO_BAM
-		TAX
+		TAX				; offset to dir header
+		PopW r6
 		LDA curDirHead,x
 		AND r8H
 		RTS
@@ -268,8 +272,7 @@ __GetFreeDirBlk:
 		LDX r10L
 		INX
 		STX r6L
-		LoadB r1L, DIR_TRACK
-		LoadB r1H, 1
+		MoveW curDirHead, r1			; get t&s from directory header
 GFDirBlk0:	JSR ReadBuff
 GFDirBlk1:	bnex GFDirBlk5
 		DEC r6L
@@ -286,7 +289,7 @@ GFDirBlk3:	LDY #FRST_FILE_ENTRY
 GFDirBlk4:	LDA diskBlkBuf,y
 		BEQ GFDirBlk5
 		TYA
-		addv $20
+		addv OFF_NXT_FILE
 		TAY
 		BCC GFDirBlk4
 		LoadB r6L, 1
@@ -294,7 +297,7 @@ GFDirBlk4:	LDA diskBlkBuf,y
 		LDY r10L
 		INY
 		STY r10L
-		CPY #$12
+		CPY #$7f				; last sector on track (presumably DIR_TRACK)
 		BCC GFDirBlk11
 GFDirBlk5:	PopW r2
 		PopB r6L
@@ -304,42 +307,16 @@ GFDirBlk5:	PopW r2
 ;---------------------------------------
 _AddDirBlock:
 		PushW r6
-		LDY #OFF_TO_DIRBAM
-		LDX #FULL_DIRECTORY
-		LDA curDirHead,y
-		BNE ADirBlkGot
-		INY
-		LDA curDirHead,y
-		BEQ ADirBlkEnd
-
-ADirBlkGot:	LDX #0
-ADirBlkLp:	LSR
-		BCS ADirBlkFree
-		INX
-		CPX #7
-		BNE ADirBlkLp
-
-ADirBlkFree:	TXA
-		CPY #OFF_TO_DIRBAM
-		BEQ ADirBlkCont
-		CLC
-		ADC #8
-ADirBlkCont:	STA r3H
-		LDA #DIR_TRACK
-		STA r3L
-
-		LDA FBBBitTab,x
-		STA r8H
-		TYA
-		TAX
-		JSR AlloBlk0
-
+		LoadB r3L, 1			; start from start of the disk
+		LoadB r3H, 0
+		JSR SetNextFree
+		bnex @end			; error
 		MoveW r3, diskBlkBuf
 		JSR WriteBuff
-		bnex ADirBlkEnd
+		bnex @end
 		MoveW r3, r1
 		JSR ClearAndWrite
-ADirBlkEnd:	PopW r6
+@end:		PopW r6
 		RTS
 
 ;---------------------------------------
@@ -375,10 +352,7 @@ BlkAlc2:	JSR SetNextFree
 		LDA r3H
 		STA (r4),y
 		AddVW 2, r4
-		LDA r5L
-		BNE *+4			; over r5H? DecW?
-		DEC r5H
-		DEC r5L
+		DecW r5
 		LDA r5L
 		ORA r5H
 		BNE BlkAlc2
@@ -405,22 +379,64 @@ __PurgeTurbo:
 __ExitTurbo:
 GetDOSError:
 __I9042:
-__SetGEOSDisk:
 		LDX #0
 		RTS
+;---------------------------------------
+__SetGEOSDisk:				; not necessary, but keep it for reference
+		jsr GetDirHead
+		bnex @end
+
+		LoadW r5, curDirHead
+		jsr CalcBlksFree	; any free blocks
+		ldx #INSUFF_SPACE
+		lda r4L
+		ora r4H
+		beq @end		; no space left for off-page (border) dir
+
+		LoadB r3L, 1		; start search at (1,0)
+		LoadB r3H, 0
+		jsr SetNextFree
+		bnex @end
+
+		MoveW r3, r1
+		jsr ClearAndWrite
+		bnex @end
+		MoveW r1, curDirHead+OFF_OP_TR_SC
+
+		ldy #OFF_GS_ID+15
+		ldx #15
+:		lda GEOSDiskID,x
+		sta curDirHead,y
+		dey
+		dex
+		bpl :-
+		jsr PutDirHead
+@end:		rts
 ;---------------------------------------
 __EnterTurbo:
 		LDA curDrive
 		JMP SetDevice		; needed?
 ;---------------------------------------
 __ChkDkGEOS:
-		LoadB isGEOS, $ff	;RAMDISK is always in GEOS
-	 	LDA isGEOS		;format
-		RTS
+		ldy #OFF_GS_ID
+		ldx #0
+		LoadB isGEOS, 0
+
+:		lda (r5),y
+		cmp GEOSDiskID,x
+		bne :+
+		iny
+		inx
+		cpx #11
+		bne :-
+		LoadB isGEOS, $ff
+
+:		lda isGEOS
+		rts
 
 ;---------------------------------------
-__OpenDisk:	JSR NewDisk
-		bnex :+
+__OpenDisk:	;JSR NewDisk		; not needed
+		;bnex :+
 		JSR GetDirHead
 		bnex :+
 		LoadW r5, curDirHead
@@ -435,8 +451,7 @@ __OpenDisk:	JSR NewDisk
 :		RTS
 ;---------------------------------------
 __PutDirHead:	JSR SetDirHead
-		JSR SetRAMCBAM
-		BNE __PutBlock
+		bra __PutBlock
 _WriteBuff:	JSR SetBufVector
 __PutBlock:	JSR InitForIO
 		JSR WriteBlock
@@ -450,65 +465,48 @@ __GetBlock:	JSR InitForIO
 		JMP DoneWithIO
 ;---------------------------------------
 _ReadLink:	JSR InitForRAM
+		bnex @done
 		LDY #0
-		LDA ATARI_EXPBASE,Y	; XXX !!!!
-		STA (r4),Y
+		LDA (z8b),y
+		STA tmpDiskBuf,y
 		INY
-		LDA ATARI_EXPBASE,Y	; XXX !!!!
-		STA (r4),Y
-		JSR DoneWithRAM
+		LDA (z8b),y
+		STA tmpDiskBuf,y
 		LDX #0
-		RTS
+@done:		JMP DoneWithRAM
 ;---------------------------------------
 __ReadBlock:	JSR InitForRAM
+		bnex @done		; page error
 		LDY #0
-:		LDA ATARI_EXPBASE,Y	; XXX !!!!
-		STA (r4),Y
+:		LDA (z8b),y
+		STA tmpDiskBuf,y
 		INY
 		BNE :-
-		JSR DoneWithRAM
 		LDX #0
-		RTS
+@done:		JMP DoneWithRAM
 ;---------------------------------------
 __VerWriteBlock:
 __WriteBlock:	JSR InitForRAM
+		bnex @done		; page error
 		LDY #0
-:		LDA (r4),Y
-		STA ATARI_EXPBASE,Y	; XXX !!!!
-		CMP ATARI_EXPBASE,Y	; XXX !!!!
-		BNE :+
+:		LDA tmpDiskBuf,y
+		STA (z8b),y
+		CMP (z8b),y
+		BNE @vererr
 		INY
 		BNE :-
 		LDX #0
-		BEQ :++
-:		LDX #31
-:		JMP DoneWithRAM
+		BEQ @done
+@vererr:	LDX #WR_VER_ERR		; it was error #31 here, why?
+@done:		JMP DoneWithRAM
 ;---------------------------------------
 SetBufVector:	LoadW r4, diskBlkBuf
 		RTS
 ;---------------------------------------
-SetDirHead:	LoadB r1L, DIR_TRACK
-		LoadB r1H, 0
-		STA r4L
-		LoadB r4H, (>curDirHead)
+SetDirHead:	LoadB r1L, RAM_DIR_TRACK
+		LoadB r1H, RAM_DIR_SECT_HEAD
+		LoadW r4, curDirHead
 		RTS
-;---------------------------------------
-SetRAMCBAM:	LDY #OFF_TO_BAM		;allocate system area
-		LDA #0
-		STA (r4),y
-;		INY
-;		STA (r4),y
-		INY
-		LDA (r4),y
-		AND #%11111000
-		STA (r4),y
-		LDY #OFF_TO_BAM+BAMLength-1
-		LDA (r4),y
-		AND #%01111111
-		STA (r4),y
-		TYA
-		RTS
-
 ;---------------------------------------
 __InitForIO:
 ; do nothing - if that is supposed to enable OS ROM functions
@@ -519,45 +517,78 @@ __InitForIO:
 		SEI
 		RTS
 ;---------------------------------------
-__DoneWithIO:	SEI
+__DoneWithIO:	; this procedure can't change X register (error code)
+		SEI
 		PushB tmpPS
 		PLP
 		RTS
 ;---------------------------------------
-InitForRAM:	MoveW r1, z8b			; preserve r1 in z8b, why?
+InitForRAM:	MoveW r1, tmpR1
 
-		; stop ANTIC NMIs here?
+		; r4 might point inside banked space, copy here first
+		LDY #0
+:		LDA (r4),y
+		STA tmpDiskBuf,y
+		INY
+		BNE :-
 
-		LDX r1H
-		LDY r1L
-		CPY #DIR_TRACK			; 18? there will be up to 16 banks (tracks) on Atari
-		BEQ InitFRAM1
-		DEY
-		LDA #0
-		STA r1L
-		STY r1H
-		LSR r1H
-		ROR r1L
-		TXA
-		CLC
-		ADC r1L
-;XXX		STA RAMC_BASE			; r1L/r1H is t&s of memory block
+		; calculate bank number from t&s in r1
+		; vector z8b to point inside ATARI_EXPBASE
+
+		; there is no track 0
+		DEC r1L
+		; convert to page address (note reversed L/H) - bring 1st bit of L into last bit of H
+		ASL r1H
+		LSR r1L
+		ROR r1H
+
+		; split into bank address and page within bank (0-64)
 		LDA r1H
-;XXX		STA RAMC_BASE+1			; translate to Atari blocks!
-		RTS
+		AND #%00111111
+		ORA #>ATARI_EXPBASE	; we could addv #>ATARI_EXPBASE but this saves a byte
+		STA z8bH
+		ASL r1H			; move top 2 bits of r1H into r1L
+		ROL r1L
+		ASL r1H
+		ROL r1L
 
-InitFRAM1:	TXA
-		CLC
-		ADC #dirHeadPos			; directory track is handled in a special way
-;XXX		STA RAMC_BASE
-		LDA #0
-;XXX		STA RAMC_BASE+1
+		; we will enable banked RAM so stop handling ANTIC NMIs fully, just count time
+		LoadB interrupt_lock, $ff
+		MoveB PIA_PORTB, tmpPIA_PORTB
+
+		LDY r1L
+		LDA atari_banks+1,y	; skip over bank0 (reserved)
+		BEQ @nosuchbank
+		STA PIA_PORTB
+		LDX #0
+		STX z8bL
+		RTS
+@nosuchbank:	LDX #INV_TRACK
 		RTS
 ;---------------------------------------
-DoneWithRAM:	MoveW z8b, r1
-		;reenable ANTIC NMIs here?
+DoneWithRAM:	; this procedure can't change X register (error code)
+		bnex @cont		; no point in copying data if there was an error
+		LDY #0
+:		LDA tmpDiskBuf,y
+		STA (r4),y
+		INY
+		BNE :-
 		;this procedure can't change X register (error code)
+@cont:		MoveW tmpR1, r1
+		MoveB tmpPIA_PORTB, PIA_PORTB
+		LoadB interrupt_lock, 0
+		TXA
 		RTS
+
+;---------------------------------------
+
+GEOSDiskID:	.byte "GEOS format V1.0",0
+
 ;---------------------------------------
 borderFlag:	.res 1		; do we have border directory sector?
 tmpPS:		.res 1		; CPU flags after DoneWithIO
+tmpPIA_PORTB:	.res 1		; banking register value outside InitForIO/DoneWithIO
+tmpR1:		.res 2		; r1 (t&s) storage during InitForRam/DoneWithRam
+
+tmpDiskBuf:	.res 256	; disk block buffer, (r4) might point to banked data
+

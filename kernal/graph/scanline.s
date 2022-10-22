@@ -13,9 +13,7 @@
 
 .import atari_banks
 .import interrupt_lock
-;XXX.import Panic
-
-.warning "scanline.s - missing Panic call for invalid dispBufferOn"
+.import Panic
 
 .global _GetScanLine
 
@@ -33,7 +31,7 @@
 _GetScanLine:
 	PushB PIA_PORTB
 	LoadB interrupt_lock, $ff
-	MoveB atari_banks, PIA_PORTB
+	MoveB atari_banks+0, PIA_PORTB
 	lda LineTabL, x
 	sta r5L
 	sta r6L
@@ -60,8 +58,7 @@ _GetScanLine:
 
 @5:	;AddVW br_screen_base+$0F00, r5	; !ST_WR_FORE && !ST_WR_BACK ?!
 	;bra @1
-	;XXX jmp Panic
-	bra @1 ; return but that should not happen
+	jmp Panic			; impossible combination, panic
 
 	.segment "scanline"
 

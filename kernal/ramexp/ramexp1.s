@@ -45,6 +45,13 @@ DetectRamExp:
 	LoadB PIA_PORTB, %11111111
 	PushB ATARI_EXPBASE
 
+	lda #0
+	tax
+:	sta atari_banks,x	;clear the table to be sure
+	inx
+	cpx #64
+	bne :-
+
 	ldx #15			;zapamiętanie bajtów ext (z 16 bloków po 64k)
 :	jsr setpb
 	lda ATARI_EXPBASE

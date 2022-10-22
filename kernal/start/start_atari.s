@@ -248,6 +248,10 @@ _ResetHandle:
 
 	jsr ClrScr
 
+;;
+jsr testDiskOps
+;;
+
 	jsr i_ImprintRectangle
 	.byte 0   ; y1
 	.byte 199 ; y2
@@ -814,3 +818,209 @@ OrigResetHandle:
 
 @end:	jmp @end
 ;	jmp EnterDeskTop
+
+
+.segment "start"
+
+.import CalcBlksFree
+.import ReadFile
+.import FollowChain
+.import PutBlock
+.import SetNextFree
+.import SetGEOSDisk
+.import PutDirHead
+.import FreeBlock
+.import OpenDisk
+.import ChkDkGEOS
+
+.global maxTrack
+.global maxSector
+.global maxResult
+.global testDiskOps
+
+diskName:	.byte "RAMDISKWITKOWIAK"
+                      ;1234567890123456
+		.byte $A0,$A0,"64",$A0,"2A",$A0,$A0,$A0,$A0,0
+
+formatDlgBox:
+	.byte DEF_DB_POS | 1
+	.byte YES, DBI_X_0, DBI_Y_2
+	.byte NO, DBI_X_2, DBI_Y_2
+	.byte DBVARSTR, 10, 32, a0
+	.byte DBVARSTR, 10, 48, a1
+	.byte NULL
+
+newRAMDlgBox:
+	.byte DEF_DB_POS | 1
+	.byte OK, DBI_X_2, DBI_Y_2
+	.byte DBVARSTR, 10, 32, a0
+	.byte DBVARSTR, 10, 48, a1
+	.byte NULL
+
+oldDiskL0:
+	.byte "Found RAM Disk. Format anyway?",0
+
+newDiskL0:
+	.byte "No GEOS RAM Disk found.",0
+newDiskL1:
+	.byte "Format will use $"
+newBanks:
+	.byte "00"
+	.byte " banks.",0
+
+; copied from Panic
+hex2digit:
+	ldx #0
+        pha
+        lsr
+        lsr
+        lsr
+        lsr
+        jsr hexdigit
+        inx
+        pla
+        and #%00001111
+        jsr hexdigit
+        inx
+        rts
+
+hexdigit:
+        cmp #10
+        bcs :+
+        addv '0'
+        bne :++
+:       addv '0'+7
+:       sta newBanks,x
+        rts
+
+;---------------------------------------
+
+testDiskOps:
+	ldx atari_nbanks
+	dex
+	txa
+	jsr hex2digit
+	jsr OpenDisk	; calls ChkDkGEOS already
+	lda isGEOS
+	beq @notGEOS
+
+	LoadW a0, oldDiskL0
+	LoadW a1, newDiskL1
+	LoadW r0, formatDlgBox
+	jsr DoDlgBox
+	CmpBI sysDBData, YES
+	beq @notGEOS
+	rts
+
+@notGEOS:
+	LoadW a0, newDiskL0
+	LoadW a1, newDiskL1
+	LoadW r0, newRAMDlgBox
+	jsr DoDlgBox
+	jsr createDirHead
+	rts
+
+createDirHead:
+	jsr OpenDisk
+	ldy #0
+	tya
+:	sta curDirHead,y
+	iny
+	bne :-
+	dey
+	sty curDirHead+1
+	;;
+	; disk name and ID
+	ldy #0
+	lda #$a0
+:	sta curDirHead+OFF_DISK_NAME,y
+	iny
+	cpy #16+11
+	bne :-
+	ldy #0
+:	lda diskName,y
+	beq :+
+	sta curDirHead+OFF_DISK_NAME,y
+	iny
+	bne :-
+:	jsr PutDirHead
+	;;
+	;; we don't handle >320K expansions yet so this firts into 8 bit counter
+	ldx atari_nbanks
+	dex			; bank0 occupied
+	txa
+	asl
+	asl
+	asl			; *8 = *64(pages)/8
+	sta r3L
+
+	lda #$ff		; all pages are free
+	ldx #0
+:	sta curDirHead+OFF_TO_BAM,x
+	inx
+	cpx #OFF_DISK_NAME-OFF_TO_BAM	; stop if too much
+	beq :+
+	cpx r3L
+	bne :-
+
+:	lda #$fe		; but (1,0) must be already allocated for dirHead
+	sta curDirHead+OFF_TO_BAM
+
+.if 0=1
+	;; this doesn't work because the driver checks atari_nbanks only on r/w
+	;; this is not efficient but let's test these BAM functions
+	LoadB r6L, 1
+	sta r6H			; or remember to allocate (1,0)
+	bne :++
+:	LoadB r6H, 0
+:	jsr FreeBlock
+	bnex :+
+	inc r6H
+	bpl :-
+	inc r6L
+	bra :--
+:				; doesn't check for maxbanks
+.endif
+	;;
+	jsr PutDirHead
+	jsr SetGEOSDisk		; get dir head; define border sector + format market, put dir head
+	;;
+	LoadB r3L, 1		; allocate space for 1st directory block
+	LoadB r3H, 0
+	jsr SetNextFree
+	MoveW r3L, curDirHead
+	jsr PutDirHead
+	;;
+	ldy #0
+	tya
+:	sta diskBlkBuf,y
+	iny
+	bne :-
+	dey
+	sty diskBlkBuf+1
+
+	MoveW curDirHead, r1
+	LoadW r4, diskBlkBuf
+	jsr PutBlock
+	;; disk is formatted now!
+
+.if (0=1)
+	;; debug
+	LoadB r1L, 1
+	LoadB r1H, 0
+	LoadW r3, fileTrScTab
+	jsr FollowChain		; ok 
+	;;
+	LoadB r1L, 1
+	LoadB r1H, 0
+	LoadW r7, $8c00
+	LoadW r2, $ffff
+	jsr ReadFile		; ok
+	;;
+	LoadW r5, curDirHead
+	jsr CalcBlksFree
+	jmp *
+.endif
+
+	rts			; end
+

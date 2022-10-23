@@ -19,13 +19,23 @@
 .include "atari.inc"
 
 .global DetectRamExp
+.global CopyRamBanksUp
+
+.global atari_pia_portb
 .global atari_banks
+.global atari_banks_lo
 .global atari_nbanks
+.global atari_nbanks_lo
 .global interrupt_lock
 
 ; stored banks
 .segment "ramexp2"
 
+atari_pia_portb		= $0100
+atari_nbanks_lo		= $0101
+atari_banks_lo		= $0102 ; +64
+
+; this will be under ROM
 atari_nbanks:	.res 1, 0
 atari_banks:	.res 64, 0
 interrupt_lock:	.res 0, 0
@@ -33,10 +43,25 @@ interrupt_lock:	.res 0, 0
 ; XXX todo: setup RAM drive (directory 1st block+header+BAM according to mem size)
 
 ; detection code
-.segment "ramexp1"
+;.segment "ramexp1"
+
+.segment "ramloader"
 
 .assert * < $4000 || * > $8000, error, "Ram Expansion detection code can't overlap with banked space"
 .assert * < $c000, error, "Ram Expansion detection code can't be under ROM"
+
+CopyRamBanksUp:
+	ldy PIA_PORTB
+	MoveB atari_banks_lo, PIA_PORTB		; it does't matter which bank, only that it's RAM
+	MoveB atari_nbanks_lo, atari_nbanks
+	ldx #0
+:	lda atari_banks_lo,x
+	sta atari_banks,x
+	inx
+	cpx #64
+	bne :-
+	sty PIA_PORTB
+	rts
 
 DetectRamExp:
 	; detect 130XE and/or memory expansions
@@ -47,7 +72,7 @@ DetectRamExp:
 
 	lda #0
 	tax
-:	sta atari_banks,x	;clear the table to be sure
+:	sta atari_banks_lo,x	;clear the table to be sure
 	inx
 	cpx #64
 	bne :-
@@ -81,13 +106,13 @@ _p2:	jsr setpb
 	bpl _n2
 
 	lda PIA_PORTB		;wpisz wartość PIA_PORTB do tablicy dla banku 0
-	sta atari_banks,y
+	sta atari_banks_lo,y
 	eor #%00000100		;uzupełnij wartości dla banków 1, 2, 3
-	sta atari_banks+1,y
+	sta atari_banks_lo+1,y
 	eor #%00001100
-	sta atari_banks+2,y
+	sta atari_banks_lo+2,y
 	eor #%00000100
-	sta atari_banks+3,y
+	sta atari_banks_lo+3,y
 	iny
 	iny
 	iny
@@ -108,7 +133,7 @@ _n2:	dex
 	PopB ATARI_EXPBASE
 	PopB PIA_PORTB
 
-	sty atari_nbanks	; number of 16K banks
+	sty atari_nbanks_lo	; number of 16K banks
 	tya
 	lsr
 	lsr

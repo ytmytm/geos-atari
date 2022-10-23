@@ -272,7 +272,8 @@ KERNAL_SOURCES = \
 	kernal/sprites/sprites.s \
 	kernal/time/time1.s \
 	kernal/tobasic/tobasic2.s \
-	kernal/vars/vars.s
+	kernal/vars/vars.s \
+	kernal/hw/ramloader.s
 endif
 
 DEPS= \

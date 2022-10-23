@@ -11,6 +11,9 @@
 .include "inputdrv.inc"
 .include "atari.inc"
 
+; ramexp.s
+.import CopyRamBanksUp
+
 ; main.s
 .import InitGEOEnv
 .import _DoFirstInitIO
@@ -64,13 +67,6 @@
 ; used by header.s
 .global _ResetHandle
 
-; ramexp1-atari.s
-.import DetectRamExp
-
-.ifdef useRamExp
-.import LoadDeskTop
-.endif
-
 .ifdef useRTC
 .import RTCSetupDateAndTime
 .endif
@@ -88,35 +84,8 @@
 .import __INPUTDRVRELOC_START__
 .import __INPUTDRVRELOC_LAST__
 .import __INPUTDRV_START__
-.import __BANK0RELOC_START__
-.import __BANK0RELOC_LAST__
-.import __BANK0_START__
 
 .segment "start"
-
-relocatebank0:
-	; DetectRamExp must have been already called and atari_banks contains banks
-	; PIA memory setup must be already set
-	; IRQ/NMI must be disabled
-.assert * < $4000 || * > $8000, error, "bank0 relocator code can't overlap with banked space"
-.assert * < $c000, error, "bank0 relocator code can't be under ROM"
-	PushB PIA_PORTB
-	LoadW r0, __BANK0RELOC_START__
-	LoadW r1, __BANK0_START__
-	MoveB atari_banks+0, PIA_PORTB			; load bank0 memory config
-	ldy #0
-	ldx #>(__BANK0RELOC_LAST__ - __BANK0RELOC_START__)
-:	lda (r0),y
-	sta (r1),y
-	iny
-	bne :-
-	inc r0H
-	inc r1H
-	dex
-	bpl :-
-	PopB PIA_PORTB
-	rts
-
 relocate:
 	; copy data from RAM to RAM under ROMs
 	; it's enough to copy whole pages
@@ -170,12 +139,7 @@ relocate:
 
 _ResetHandle:
 
-	; check if we have at least 128K and how to program bank bits
-	jsr DetectRamExp
-	lda atari_nbanks
-	bne :+
-	jmp ($fffc)
-
+	; atari ramloader does setup before
 :	sei
 	cld
 	ldx #$FF
@@ -199,17 +163,15 @@ _ResetHandle:
 	LoadB PIA_PORTA, %00000000                      ; all PORTA pins as input
 	LoadB PIA_PACTL, %00110100                      ; no interrupts from PIA, PORTA as I/O (joystick I/O)
 
-	; copy banked kernal code
-	jsr relocatebank0
+	jsr CopyRamBanksUp		; copy detected banks to target location under ROM (also it's cleared if we don't put it into BSS segment)
+
 	; copy high RAM area code so it's safe to call following Kernal functions
 	jsr relocate
 
 	; setup hardware, registers, IRQ/NMI vectors and enable all as RAM
 	jsr _DoFirstInitIO
 
-
-	; LUnix had PAL/NTSC detection here, could be used for timers?
-;	jsr displaylistinit
+	; PAL/NTSC detection here?
 
 	; this is mostly about memory cleanup, registers are already set
 	jsr AtariPlayersInit

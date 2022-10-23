@@ -3,3 +3,8 @@ GEOS128.D64
 desktop.cvt
 build
 emu
+tools/*.bin
+*.cvt
+*.grcs
+*.grco
+apps/cc65/*/*.[s,o]

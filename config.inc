@@ -9,140 +9,6 @@ config_inc = 1
 ;------------------------
 ; use "make TARGET=<variant>" to build a specific variant
 
-;------------------------
-; the Berkeley Softworks GEOS 64 2.0 variant
-;------------------------
-.ifdef bsw
-	; BSW traps to counter tampering
-	traps = 1
-.endif
-
-;------------------------
-; the Berkeley Softworks GEOS 128 2.0 variant
-;------------------------
-.ifdef bsw128
-	; BSW traps to counter tampering
-	traps = 1
-	trap2_alternate_location = 1
-.endif
-
-;------------------------
-; the cbmfiles.com variant of GEOS 64 2.0
-;------------------------
-.ifdef cbmfiles
-	; BSW traps to counter tampering
-	traps = 1
-
-	; additionally, there are ".ifdef cbmfiles" checks
-	; throughout the code
-.endif
-
-;------------------------
-; the gateWay 2.51 variant
-;------------------------
-.ifdef gateway
-	traps = 1
-	gateway_font = 1
-
-	; additionally, there are ".ifdef gateway" checks
-	; throughout the code
-.endif
-
-;------------------------
-; the Wheels 64 variant
-;------------------------
-.ifdef wheels
-	; size optimizations that have no significant speed impact
-	wheels_size = 1
-
-	; optimizations that benefit both size and speed
-	wheels_size_and_speed = 1
-
-	; remove "BootGEOS" ($C000) code to save some size
-	wheels_remove_BootGEOS = 1
-
-	; fixes for bugs in the BSW version
-	wheels_fixes = 1
-
-	; dialog box buttons can be selected using "o" for
-	; "Open" etc.
-	wheels_button_shortcuts = 1
-
-	; misc dialog box features, requires RAM extension
-	wheels_dlgbox_features = 1
-
-	; dialog box double click support
-	wheels_dlgbox_dblclick = 1
-
-	; support for chdir in dialogs
-	wheels_dialog_chdir = 1
-
-	; screensaver support
-	wheels_screensaver = 1
-
-	; ReadFile and WriteFile are in a "NewKernal" group
-	wheels_external_readwrite_file = 1
-
-	; allows applications to check whether modifier keys are pressed
-	wheels_expose_mod_keys = 1
-
-	; changes that are actually bad ideas
-	wheels_bad_ideas = 1
-
-	; German keyboard layout
-	german_keyboard = 1
-
-	; additionally, there are ".ifdef wheels" checks
-	; throughout the code
-.endif
-
-.ifdef beamracer
-	; make use of all reusable Wheels optimizations and fixes
-	wheels_size = 1
-	wheels_size_and_speed = 1
-	wheels_remove_BootGEOS = 1
-	wheels_fixes = 1
-
-	remove_dead_bytes = 1
-
-	; replace BASIC reboot code with trivial version (+200 bytes)
-	removeToBASIC = 1
-
-	; for 2MHz-on-border on C128 in 64 mode (no beamracer version for C128)
-	;use2MHz = 1
-
-	; only VLIR and SEQ supported
-	;onlyVLIR = 1
-
-	; RAM expansions configuration
-	; this occupies bank 0 (DeskTop cache, DA swap file)
-        ;               banks 1-3 (1541 cache)
-	useBeamRacerRam = 1
-
-	; Beamracer display list bank
-	br_dlist_bank =  7
-	; Beamracer display list address (right behind the screen) (this would have to be defined as VASYL memory area load/run address)
-	br_dlist_base = $c0 ; $00C0 ;$A000 ;+8000
-	; Beamracer screen bank
-	br_screen_bank = 7
-	; Beamracer screen base addresses, low byte *must* be equal in both
-	br_screen_base = $C000
-	br_backscreen_base = $E000
-
-	; GEOS2000
-	; makes drawing dialog boxes much faster, might cause visual mess
-	; takes more bytes
-	;speedupDlgBox = 1
-
-	; GEOS2000
-	; bug - when 0 no blinking in menu
-	;newMenu_5 = 1
-
-	; RTC driver to set date&time upon boot
-	rtc_Ultimate2Plus = 1
-
-.endif
-
 .ifdef atari
 	; make use of all reusable Wheels optimizations and fixes
 ;	wheels_size = 1
@@ -151,47 +17,6 @@ config_inc = 1
 ;	wheels_fixes = 1
 
 	remove_dead_bytes = 1
-.endif
-
-.ifdef custom
-	; make use of all reusable Wheels optimizations and fixes
-	wheels_size = 1
-	wheels_size_and_speed = 1
-	wheels_remove_BootGEOS = 1
-	wheels_fixes = 1
-
-	remove_dead_bytes = 1
-
-	; replace BASIC reboot code with trivial version (+200 bytes)
-	removeToBASIC = 1
-
-	; for 2MHz-on-border on C128 in 64 mode
-	use2MHz = 1
-
-	; only VLIR and SEQ supported
-	;onlyVLIR = 1
-
-	; RAM expansions configuration
-	; (only one may be defined, if all are undefined, then REU is utililzed)
-	; for +60K expansion users
-	;usePlus60K = 1
-	; for Ram Cart 64K
-	;useRamCart64 = 1
-	; for Ram Cart 128K
-	;useRamCart128 = 1
-
-	; GEOS2000
-	; makes drawing dialog boxes much faster, might cause visual mess
-	; takes more bytes
-	;speedupDlgBox = 1
-
-	; GEOS2000
-	; bug - when 0 no blinking in menu
-	;newMenu_5 = 1
-
-	; RTC driver to set date&time upon boot
-	;rtc_Ultimate2Plus = 1
-
 .endif
 
 ; Feel (almost) free to change values below:
@@ -215,31 +40,10 @@ backPattern2    = %10101010                     ; %10101010
 REUOsVarBackup  =    $7900                      ; base for OS_VARS_LGH bytes for reboot
 REUDskDrvSPC    =    $8300                      ; base for 4*DISK_DRV_LGH disk drivers
 
-; do not change two values below - it's automatic
 ; Atari doesn't have REU and RAM expansion is occupied by OS by default, so no support for REU-like RAM OPs for apps
 .if .defined(atari)
 ;REUPresent = 1
 ;useRamExp = 1
-.else
-.if .defined(usePlus60K) || .defined(useRamCart64) || .defined(useRamCart128) || .defined(useBeamRacerRam)
-useRamExp = 1
-.else
-REUPresent = 1
-.endif
-.endif
-
-; but for Beamracer we want to keep REU support too
-.if .defined(useBeamRacerRam)
-REUPresent = 1
-.endif
-
-.if .defined(rtc_Ultimate2Plus)
-useRTC = 1
-.endif
-
-.ifdef traps
-	trap1 = 1
-	trap2 = 1
 .endif
 
 .if .defined(drv1541)

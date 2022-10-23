@@ -1,17 +1,27 @@
 #!/usr/bin/python3
 
-print("Hello!")
+# Atari RAM DISK image builder, Maciej Witkowiak, 2022
 
-# this will be created out of a command line option
-# split this by $4000 pieces already?
-outname = "image.bin"
+# this tool will build 3 or 15 chunks of 16K blocks that are loaded into expanded RAM
+# (segments RAM0/RAM1/.. from kernal/kernal_atari.cfg)
+# files need to be inclded by incbin in kernal/ramexp/ramexp1.s
+
+# - VLIR unsupported (so e.g no fonts), not even checked
+# - only 8 files (no dir block allocation)
+# - no command line args
+#   - number of banks (3 or 15)
+#   - cvt files paths
+#   - output path (for build/atari/ from top-level Makefile)
+# - bug: why last saved bank file is one byte too short?
 
 # number of available memory banks-1
 # 3  for 128K (130XE)
 # 15 for 256K (320K)
 # more unsupported (needs changes both here and in the disk driver - where to put BAM2/BAM3)
 # this will be created out of a command line option
+
 nbanks = 3
+outfileprefix = "image"
 
 ################## const.inc
 
@@ -119,9 +129,18 @@ def copyDirEntry(image, nFiles, dirEntry):
 	image[offs:offs+30] = dirEntry[0:30]
 
 
-# load 1st file
-if (True):
-	with open("yesno.cvt","rb") as f:
+# load files
+cvtfiles = [
+     "../apps/cc65/geosver/geosver.cvt"
+    ,"../apps/cc65/getid/getid.cvt"
+    ,"../apps/cc65/filesel/filesel.cvt"
+    ,"../apps/cvt/FontView.cvt"
+    ,"../apps/cvt/Yahtzee.cvt"
+]
+
+for fname in cvtfiles:
+	print(f'Processing {fname}')
+	with open(fname,"rb") as f:
 		direntry = bytearray(f.read(254))
 		header   = bytearray(f.read(254))
 		data     = bytearray(f.read(-1))
@@ -158,133 +177,15 @@ if (True):
 		# copy direntry into directory
 		copyDirEntry(image,nFiles,direntry)
 		nFiles = nFiles+1
-
-if (True):
-	with open("geosver.cvt","rb") as f:
-		direntry = bytearray(f.read(254))
-		header   = bytearray(f.read(254))
-		data     = bytearray(f.read(-1))
-		print(f'data is {len(data)} bytes')
-		datachunks = []
-		for n in range(int(len(data)/254)+1):
-			datachunks.append(data[n*254:(n+1)*254])
-		print(f'{len(datachunks)} chunks')
-		for n in range(len(datachunks)):
-			print(f'chunk {n} has {len(datachunks[n])} bytes')
-		# store header on first free page
-		offs = page_to_offset(freePage)+2
-		image[offs:offs+254] = header
-		# store header t&s in direntry
-		direntry[OFF_GHDR_PTR:OFF_GHDR_PTR+2] = page_to_ts(freePage)
-		freePage = freePage+1
-		# store data t&s in direntry
-		direntry[OFF_DE_TR_SC:OFF_DE_TR_SC+2] = page_to_ts(freePage)
-		# store size in direntry
-		sizehi = int((1+len(datachunks))/256)
-		sizelo = 1+len(datachunks) - sizehi*256
-		direntry[OFF_SIZE] = sizelo
-		direntry[OFF_SIZE+1] = sizehi
-		# store data on following pages
-		for n in range(len(datachunks)):
-			offs = page_to_offset(freePage)+2
-			if (n+1 == len(datachunks)): # if last block - last used byte in that block
-				image[offs-1] = len(datachunks[n])+1
-				image[offs:offs+len(datachunks[n])] = datachunks[n]
-			else:
-				image[offs:offs+254] = datachunks[n]
-				image[offs-2:offs]   = page_to_ts(freePage+1)
-			freePage = freePage+1
-		# copy direntry into directory
-		copyDirEntry(image,nFiles,direntry)
-		nFiles = nFiles+1
-
-if (True):
-	with open("getid.cvt","rb") as f:
-		direntry = bytearray(f.read(254))
-		header   = bytearray(f.read(254))
-		data     = bytearray(f.read(-1))
-		print(f'data is {len(data)} bytes')
-		datachunks = []
-		for n in range(int(len(data)/254)+1):
-			datachunks.append(data[n*254:(n+1)*254])
-		print(f'{len(datachunks)} chunks')
-		for n in range(len(datachunks)):
-			print(f'chunk {n} has {len(datachunks[n])} bytes')
-		# store header on first free page
-		offs = page_to_offset(freePage)+2
-		image[offs:offs+254] = header
-		# store header t&s in direntry
-		direntry[OFF_GHDR_PTR:OFF_GHDR_PTR+2] = page_to_ts(freePage)
-		freePage = freePage+1
-		# store data t&s in direntry
-		direntry[OFF_DE_TR_SC:OFF_DE_TR_SC+2] = page_to_ts(freePage)
-		# store size in direntry
-		sizehi = int((1+len(datachunks))/256)
-		sizelo = 1+len(datachunks) - sizehi*256
-		direntry[OFF_SIZE] = sizelo
-		direntry[OFF_SIZE+1] = sizehi
-		# store data on following pages
-		for n in range(len(datachunks)):
-			offs = page_to_offset(freePage)+2
-			if (n+1 == len(datachunks)): # if last block - last used byte in that block
-				image[offs-1] = len(datachunks[n])+1
-				image[offs:offs+len(datachunks[n])] = datachunks[n]
-			else:
-				image[offs:offs+254] = datachunks[n]
-				image[offs-2:offs]   = page_to_ts(freePage+1)
-			freePage = freePage+1
-		# copy direntry into directory
-		copyDirEntry(image,nFiles,direntry)
-		nFiles = nFiles+1
-
-if (True):
-	with open("filesel.cvt","rb") as f:
-		direntry = bytearray(f.read(254))
-		header   = bytearray(f.read(254))
-		data     = bytearray(f.read(-1))
-		print(f'data is {len(data)} bytes')
-		datachunks = []
-		for n in range(int(len(data)/254)+1):
-			datachunks.append(data[n*254:(n+1)*254])
-		print(f'{len(datachunks)} chunks')
-		for n in range(len(datachunks)):
-			print(f'chunk {n} has {len(datachunks[n])} bytes')
-		# store header on first free page
-		offs = page_to_offset(freePage)+2
-		image[offs:offs+254] = header
-		# store header t&s in direntry
-		direntry[OFF_GHDR_PTR:OFF_GHDR_PTR+2] = page_to_ts(freePage)
-		freePage = freePage+1
-		# store data t&s in direntry
-		direntry[OFF_DE_TR_SC:OFF_DE_TR_SC+2] = page_to_ts(freePage)
-		# store size in direntry
-		sizehi = int((1+len(datachunks))/256)
-		sizelo = 1+len(datachunks) - sizehi*256
-		direntry[OFF_SIZE] = sizelo
-		direntry[OFF_SIZE+1] = sizehi
-		# store data on following pages
-		for n in range(len(datachunks)):
-			offs = page_to_offset(freePage)+2
-			if (n+1 == len(datachunks)): # if last block - last used byte in that block
-				image[offs-1] = len(datachunks[n])+1
-				image[offs:offs+len(datachunks[n])] = datachunks[n]
-			else:
-				image[offs:offs+254] = datachunks[n]
-				image[offs-2:offs]   = page_to_ts(freePage+1)
-			freePage = freePage+1
-		# copy direntry into directory
-		copyDirEntry(image,nFiles,direntry)
-		nFiles = nFiles+1
-
 
 # allocate until freepage in BAM
+#  full bytes (8 pages)
 fullBytes = int(freePage/8)
 for n in range(fullBytes):
 	image[OFF_TO_BAM+n] = 0
 k = freePage - 8*fullBytes
+#  last incomplete byte
 if (k!=0):
 	image[OFF_TO_BAM+fullBytes] = (0x100 - (1 << k)) & 0xff
 
-#print(f'Have {len(buf)} bytes')
-
-writeImageChunks(image, nbanks)
+writeImageChunks(image, nbanks, outfileprefix)

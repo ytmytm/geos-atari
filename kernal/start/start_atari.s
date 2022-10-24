@@ -198,6 +198,13 @@ _ResetHandle:
 
 	jsr InitGEOEnv
 
+	; fake Commodore drive
+	LDY #8
+	STY curDevice
+	STY curDrive
+	LDA #DRV_1581 | $80		; RAM 1581
+	STA _driveType,y
+
 	; XXX this needs to stay here until DoDlgBox is ready to be Panic() call
 	;LoadW BRKVector, _BRKHandler	; InitRam would make this Panic, but we don't have Panic yet
 

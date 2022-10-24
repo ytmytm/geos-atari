@@ -50,13 +50,15 @@ RamLoaderInit:
 	; OS loader will jump here
 RamLoaderNextChunk:
 	inc curRecord
-	ldy curRecord
+	CmpB curRecord, atari_nbanks_lo	; we will be called once after last chunk too
+	beq :++
+	tay
 	lda atari_banks_lo,y
 	bne :+
 	jmp ($fffc)			; no bank? something went wrong
 :	ora #1				; keep ROM enabled
 	sta PIA_PORTB
-	rts
+:	rts
 
 	;; restore memory config
 RamLoaderLastChunk:

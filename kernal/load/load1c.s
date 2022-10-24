@@ -17,8 +17,8 @@
 
 DeskTopName:
 .warning "load1c - debug desktop name"
-	.byte "filesel",0
-;	.byte "DESK TOP", 0
+;	.byte "filesel",0
+	.byte "DESK TOP", 0
 
 .segment "load1d"
 

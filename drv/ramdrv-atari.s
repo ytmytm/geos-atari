@@ -577,6 +577,7 @@ InitForRAM:	MoveW r1, tmpR1
 		RTS
 ;---------------------------------------
 DoneWithRAM:	; this procedure can't change X register (error code)
+		MoveB tmpPIA_PORTB, PIA_PORTB
 		bnex @cont		; no point in copying data if there was an error
 		LDY #0
 :		LDA tmpDiskBuf,y
@@ -585,7 +586,6 @@ DoneWithRAM:	; this procedure can't change X register (error code)
 		BNE :-
 		;this procedure can't change X register (error code)
 @cont:		MoveW tmpR1, r1
-		MoveB tmpPIA_PORTB, PIA_PORTB
 		LoadB interrupt_lock, 0
 		TXA
 		RTS

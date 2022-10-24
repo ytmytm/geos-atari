@@ -162,10 +162,10 @@ __CalcBlksFree:
 		LDY atari_nbanks
 		DEY				; bank 0 occupied by OS
 		STY r3H				; * 256
-		ASL r3H
-		ROL r3L				; /2
-		ASL r3H
-		ROL r3L				; /2 -> *256/4 -> *64 pages
+		LSR r3H
+		ROR r3L				; /2
+		LSR r3H
+		ROR r3L				; /2 -> *256/4 -> *64 pages
 		RTS
 
 ;---------------------------------------

@@ -1,8 +1,10 @@
 # GEOS Atari port
 
-by Berkeley Softworks, reverse-engineered by *Maciej Witkowiak*, *Michael Steil*
+GEOS 2.0 by Berkeley Softworks
 
-GEOS ported to 8-bit Atari by *Maciej Witkowiak*
+This is a fork of [GEOS 2.0 for C64/128 reverse-engineered](https://github.com/mist64/geos) by *Maciej Witkowiak*, *Michael Steil*
+
+GEOS 2.0 ported to 8-bit Atari by *Maciej Witkowiak*
 
 ## What is GEOS?
 
@@ -20,7 +22,14 @@ Block Allocation Maps (BAMs) and so the image creator can't write such images.
 There is only RAM disk available at the moment. I don't know how to handle communication with disk drives over SIO.
 Please help if you can!
 
+Unlike Apple 2 version, this port is *binary compatible with well-behaved GEOS software released for C64/128*.
+
+Unfortunately even some of BSW's own software for GEOS 64 make assumptions about the system that may cause (in best scenario) visual glitches.
+Many of these issues were later corrected for GEOS 128 due to 80-column mode support, but this port doesn't try to be compatible with GEOS128.
+
 ## Quickstart
+
+Download GEOS.XEX from the Releases section. This file contains RAM disk image, GEOS Kernal, disk driver, input driver and loader for the whole thing.
 
 Run emulator and make sure to choose PAL system with at least 128K of RAM. Setup joystick in port 1. Load the GEOS.XEX file into emulator.
 
@@ -65,7 +74,7 @@ Programs will not work correctly if:
     - they access bitmap screen in 40-column mode directly (e.g. Maverick)
     - they write directly to I/O registers (e.g printer drivers)
 
-They may not work at all or show some graphical glitches.
+They may not work at all or show some graphical glitches. For example, if an application tries to add some color it will write to `COLOR_MATRIX` space, which is now occupied by Player0/1/2/3 data, so mouse pointer will be temporarily overwritten.
 
 Just like on C64 the processes (sleep and multitasking) are clocked by video frame rate.
 
@@ -150,7 +159,7 @@ The requirements for a disk driver are:
     - sectors are addressed by 8-bit track and sector numbers
     - if a device responds to an identifier (disk drive number) it should be possible to change that identifier (DESK TOP uses this feature to swap third drive with one of the first two, but it's purely UI issue, not a system requirement)
 
-GEOS Kernal implements on top of that a Commodore DOS-like file system. Track number 0 is forbidden, so the largest possible disk/partition (see my CIAIDE project) may have
+GEOS Kernal implements on top of that a Commodore DOS-like file system. Track number 0 is forbidden, so the largest possible disk/partition (see my [CIAIDE project](https://github.com/ytmytm/c64-ciaide)) may have
 up to 255 tracks, 256 sectors each for a total of almost 16MB.
 
 Current RAM drive implementation:
@@ -166,10 +175,11 @@ There are none, they will have to be ported. See Disk Drive section for notes ab
 
 ### Time and date
 
-There is no CIA time-of-day (TOD) clock, timekeeping is done by counting vertical blank interrupts.
+There is no CIA time-of-day (TOD) clock, timekeeping is done by counting vertical blank interrupts. During banked operations a short interrupt routine is called and some of these events may be lost.
 
-There is no support for alarm clock. It's tied to CIA TOD clock hardware feature. The system doesn't provide any function to set the alarm (it's done in hardware by a Desk Accessory)
-you can only choose if/how it should react to the alarm. Also there is no POKEY replacement code for playing chimes.
+There is no support for alarm clock. It's tied to CIA TOD clock hardware feature.
+The system doesn't provide any function to set the alarm (it's done in hardware by a Desk Accessory) you can only choose if/how it should react to the alarm.
+There is no POKEY replacement code for playing sound chimes.
 
 There is no PAL/NTSC detection yet, the system is assumed to be PAL.
 
@@ -177,7 +187,7 @@ There is no PAL/NTSC detection yet, the system is assumed to be PAL.
 
 It's best to use Linux or WSL for that.
 
-Install cc65 suite and:
+Install Python3 and cc65 suite and then:
 
     - run Makefile from cc65/apps (this will build filesel.cvt)
     - run mkramdisk.py from tools/ folder (this will build tools/image*.bin files with RAM disk)
@@ -195,3 +205,5 @@ You would also have to modify linker script kernal/kernal_atari.cfg and add more
 and list memory segments that are loaded into those memory areas.
 
 Finally change kernal/hw/ramloader.s and list new segments with *.incbin* commands for more chunks to be loaded into banks.
+
+In the future this will be handled by the main Makefile.

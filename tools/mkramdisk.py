@@ -124,10 +124,10 @@ def formatImage(image, nbanks, nfiles=8, diskname="RAMDISKWITKOWIAKAAAAAAAA", di
 	# link dir head to 1st dir sector at (1,2)
 	image[0] = 1
 	image[1] = 1
-	freePage = 1 # 0 already occupied
+	freePage = 2 # 0,1 already occupied
 	needDirSectors = int(nfiles/8)
-	if needDirSectors == 0:
-		freePage = freePage+1
+#	if needDirSectors == 0:
+#		freePage = freePage+1
 #		needDirSectors = 1
 	print(f'need {needDirSectors} for directory')
 	for k in range(0,needDirSectors):

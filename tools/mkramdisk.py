@@ -114,9 +114,6 @@ def formatImage(image, nbanks, nfiles=8, diskname="RAMDISKWITKOWIAKAAAAAAAA", di
 	image[OFF_DISK_NAME:OFF_DISK_NAME+len(diskname)] = diskname
 	image[OFF_DISK_NAME+16+2:OFF_DISK_NAME+16+2+2] = diskid
 	image[OFF_DISK_NAME+16+2+2+1:OFF_DISK_NAME+16+2+2+2+1+2] = bytes("2A".encode('ascii'))
-	# link to border sector at (1,1)
-	image[OFF_OP_TR_SC] = 1
-	image[OFF_OP_TR_SC+1] = 1
 	# signature
 	image[OFF_GS_ID:OFF_GS_ID+15] = bytes("GEOS format V1.0".encode("ascii"))
 	# BAM (all free)
@@ -126,11 +123,12 @@ def formatImage(image, nbanks, nfiles=8, diskname="RAMDISKWITKOWIAKAAAAAAAA", di
 #	image[OFF_TO_BAM] = image[OFF_TO_BAM] & 0b11111000
 	# link dir head to 1st dir sector at (1,2)
 	image[0] = 1
-	image[1] = 2
-	freePage = 2 # 0 and 1 already occupied
+	image[1] = 1
+	freePage = 1 # 0 already occupied
 	needDirSectors = int(nfiles/8)
 	if needDirSectors == 0:
-		needDirSectors = 1
+		freePage = freePage+1
+#		needDirSectors = 1
 	print(f'need {needDirSectors} for directory')
 	for k in range(0,needDirSectors):
 		print(f'link 1,{freePage+1} to sector 1,{freePage} at {freePage*256}')
@@ -138,8 +136,12 @@ def formatImage(image, nbanks, nfiles=8, diskname="RAMDISKWITKOWIAKAAAAAAAA", di
 		image[freePage*256] = 1
 		image[freePage*256+1] = freePage+1
 		freePage = freePage + 1
+	# link to border sector at (1,freePage)
+	image[OFF_OP_TR_SC] = 1
+	image[OFF_OP_TR_SC+1] = freePage
 	# return first free page (1,3) = (1-1)*128+3 = 3
-	return freePage+1 # why +1?
+	freePage = freePage+1
+	return freePage
 
 
 def writeImageChunks(image, nbanks, prefix = "image"):
@@ -151,8 +153,8 @@ def writeImageChunks(image, nbanks, prefix = "image"):
 		outfile.close()
 
 def copyDirEntry(image, nFiles, dirEntry):
-	# directory blocks start on page 2 and there is enough of them to hold all the files
-	offs = 0x200 + nFiles*32 + 2
+	# directory blocks start on page 1 and there is enough of them to hold all the files
+	offs = 0x100 + nFiles*32 + 2
 	image[offs:offs+30] = dirEntry[0:30]
 
 ######### MAIN

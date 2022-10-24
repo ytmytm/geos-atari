@@ -6,13 +6,10 @@
 # (segments RAM0/RAM1/.. from kernal/kernal_atari.cfg)
 # files need to be inclded by incbin in kernal/ramexp/ramexp1.s
 
-# - VLIR unsupported (so e.g no fonts), not even checked
-# - only 8 files (no dir block allocation)
 # - no command line args
 #   - number of banks (3 or 15)
 #   - cvt files paths
 #   - output path (for build/atari/ from top-level Makefile)
-# - bug: why last saved bank file is one byte too short?
 
 # number of available memory banks-1
 # 3  for 128K (130XE)
@@ -39,6 +36,18 @@ cvtfiles = [
     ,"../apps/cvt/listmaker.cvt"
 #    ,"../apps/cvt/geotype.cvt"
 ]
+
+cvtfiles = [
+     "../apps/cc65/geosver/geosver.cvt"
+    ,"../apps/cc65/getid/getid.cvt"
+    ,"../apps/cc65/filesel/filesel.cvt"
+    ,"../apps/cvt/FontView.cvt"
+    ,"../apps/cvt/Yahtzee.cvt"
+    ,"../apps/cvt/a.cvt"
+    ,"../apps/cvt/HeaderEditor-1.1.cvt"
+    ,"ANDROMEDA.cvt"
+    ,"ALIEN.cvt"
+    ]
 
 ################## const.inc
 
@@ -137,7 +146,7 @@ def writeImageChunks(image, nbanks, prefix = "image"):
 	# write the outputs
 	for k in range(nbanks):
 		outfile = open(f'{prefix}{format(k,"02x")}.bin',"wb")
-		print(f'writing {format(k,"02x")} from {k*0x4000} to {(k+1)*0x4000}')
+		print(f'writing {format(k,"02x")} from ${format(k*0x4000,"04x")} to ${format((k+1)*0x4000,"04x")}')
 		outfile.write(image[k*0x4000:(k+1)*0x4000])
 		outfile.close()
 
@@ -149,37 +158,48 @@ def copyDirEntry(image, nFiles, dirEntry):
 ######### MAIN
 
 # buffer to hold the data
-image = bytearray(nbanks * 0x4000)
+image = bytearray(nbanks * 0x4000+1)		# why +1? is that right?
 
 # format image and return first free page
 freePage = formatImage(image,nbanks,len(cvtfiles))
 
 #cvtfiles = []
 
-print(f'{len(cvtfiles)} to import')
+print(f'{len(cvtfiles)} files to import')
 
 # there are no files in the image yet
 nFiles = 0
 for fname in cvtfiles:
-	print(f'Processing {fname}')
+	print(f'{fname}')
 	with open(fname,"rb") as f:
 		direntry = bytearray(f.read(254))
 		header   = bytearray(f.read(254))
 		data     = bytearray(f.read(-1))
-		print(f'data is {len(data)} bytes')
+		print(f'\ttotal data has {len(data)} bytes')
+#		print(f'{direntry[33:34+21].decode("ascii")}')
+		signature = (direntry[33:34+21].decode('ascii') == ' formatted GEOS file V')
+		if not signature:
+			print(f'{fname} is not a GEOS Converted file, skipping')
+			continue
 		datachunks = []
 		for n in range(int(len(data)/254)+1):
 			datachunks.append(data[n*254:(n+1)*254])
-		print(f'{len(datachunks)} chunks')
-		for n in range(len(datachunks)):
-			print(f'chunk {n} has {len(datachunks[n])} bytes')
+		print(f'\t{len(datachunks)} sectors')
+#		for n in range(len(datachunks)):
+#			print(f'chunk {n} has {len(datachunks[n])} bytes')
 		# store header on first free page
 		offs = page_to_offset(freePage)+2
 		image[offs:offs+254] = header
 		# store header t&s in direntry
 		direntry[OFF_GHDR_PTR:OFF_GHDR_PTR+2] = page_to_ts(freePage)
 		freePage = freePage+1
+		# is this VLIR?
+#		print(f'structure : {direntry[OFF_GSTRUC_TYPE]}')
+		isVLIR = (direntry[OFF_GSTRUC_TYPE]!=0)
 		# store data t&s in direntry
+		if (isVLIR):
+			print("\tthis is a VLIR file")
+			recordPage = freePage
 		direntry[OFF_DE_TR_SC:OFF_DE_TR_SC+2] = page_to_ts(freePage)
 		# store size in direntry
 		sizehi = int((1+len(datachunks))/256)
@@ -199,6 +219,28 @@ for fname in cvtfiles:
 		# copy direntry into directory
 		copyDirEntry(image,nFiles,direntry)
 		nFiles = nFiles+1
+		# data was stored in one run, now go back and adjust VLIR chains if needed
+		if not isVLIR:
+			continue
+		print(f"\tadjusting VLIR chains, record block on page ${format(recordPage,'04x')}")
+		offs = page_to_offset(recordPage)
+		filePage = recordPage+1
+		image[offs] = 0
+		image[offs+1] = 0xff
+		offs = offs + 2
+		for chain in range(0,127):
+			if image[offs]>0:
+				npages = image[offs]
+				lastbyte = image[offs+1]
+				print(f'\tfound chain {chain} at {format(filePage,"04x")} ({npages} long, last byte {lastbyte})')
+				image[offs:offs+2] = page_to_ts(filePage)	# adjust record pointer
+				filePage = filePage + npages
+				offs_chain = page_to_offset(filePage-1)
+				image[offs_chain] = 0
+				image[offs_chain+1] = lastbyte			# adjust last sector - last used byte (we don't keep earlier value because on RAM disk the interleave is 1, next chunk starts in the following page)
+			offs = offs+2
+
+print(f"last available page is {format(freePage,'04x')} out of {format(nbanks*64,'04x')}, {format(nbanks*64-freePage,'04x')} sectors remaining")
 
 # allocate until freepage in BAM
 #  full bytes (8 pages)

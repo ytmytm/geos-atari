@@ -29,6 +29,8 @@ Many of these issues were later corrected for GEOS 128 due to 80-column mode sup
 
 ## Quickstart
 
+Download GEOS.XEX from the Releases section. This file contains RAM disk image, GEOS Kernal, disk driver, input driver and loader for the whole thing.
+
 Run emulator and make sure to choose PAL system with at least 128K of RAM. Setup joystick in port 1. Load the GEOS.XEX file into emulator.
 
 First there will be a message about detected RAM disk. RAM disk contents are loaded first from the XEX file.

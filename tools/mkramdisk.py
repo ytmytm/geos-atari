@@ -56,6 +56,7 @@ cvtfiles = [
 #    ,"ALIEN.cvt"
     ,"../apps/cvt/Yahtzee.cvt"
     ,"../apps/cvt/FontView.cvt"
+    ,"calculator.cvt"
     ]
 
 

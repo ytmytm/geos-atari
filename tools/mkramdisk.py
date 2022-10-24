@@ -23,6 +23,23 @@
 nbanks = 3
 outfileprefix = "image"
 
+# load files
+cvtfiles = [
+     "../apps/cc65/geosver/geosver.cvt"
+    ,"../apps/cc65/getid/getid.cvt"
+    ,"../apps/cc65/filesel/filesel.cvt"
+    ,"../apps/cvt/FontView.cvt"
+    ,"../apps/cvt/Yahtzee.cvt"
+    ,"../apps/cvt/quick dateset.cvt"
+    ,"../apps/cvt/maverick s.e..cvt"
+    ,"../apps/cvt/dirmanager.cvt"
+    ,"../apps/cvt/Desk Organizer.cvt"
+    ,"../apps/cvt/geoPack-2_1.cvt"
+    ,"../apps/cvt/convert3.0.cvt"
+    ,"../apps/cvt/listmaker.cvt"
+#    ,"../apps/cvt/geotype.cvt"
+]
+
 ################## const.inc
 
 # directory
@@ -63,7 +80,7 @@ def offset_to_page(offs):
 def offset_to_ts(offs):
 	return page_to_ts(offset_to_page(offs))
 
-def formatImage(image, nbanks, diskname="RAMDISKWITKOWIAKAAAAAAAA", diskid="64"):
+def formatImage(image, nbanks, nfiles=8, diskname="RAMDISKWITKOWIAKAAAAAAAA", diskid="64"):
 	# format:
 	# convert parameters to ascii and trim
 	diskname = bytes(diskname.encode('ascii'))[0:16]
@@ -71,8 +88,8 @@ def formatImage(image, nbanks, diskname="RAMDISKWITKOWIAKAAAAAAAA", diskid="64")
 	# to make it simple write (ff) into every 2nd byte in a block, no need for clear & write
 	for k in range(1,nbanks*64):
 		image[k*256+2] = 0xff
-		image[k*256+3] = (k & 0xff00) >> 8	# page number marker for debug
-		image[k*256+4] = k & 0xff
+#		image[k*256+3] = (k & 0xff00) >> 8	# page number marker for debug
+#		image[k*256+4] = k & 0xff
 	# init disk header at (1,0)
 	# - disk name+id + $a0 padding
 	# - BAM (according to nbanks)
@@ -98,11 +115,22 @@ def formatImage(image, nbanks, diskname="RAMDISKWITKOWIAKAAAAAAAA", diskid="64")
 		image[OFF_TO_BAM+k] = 0xff
 	# allocate first 3 sectors on track 0 (head, border, 1st dir)
 #	image[OFF_TO_BAM] = image[OFF_TO_BAM] & 0b11111000
-	# link dir head to 1st dir sector
+	# link dir head to 1st dir sector at (1,2)
 	image[0] = 1
 	image[1] = 2
+	freePage = 2 # 0 and 1 already occupied
+	needDirSectors = int(nfiles/8)
+	if needDirSectors == 0:
+		needDirSectors = 1
+	print(f'need {needDirSectors} for directory')
+	for k in range(0,needDirSectors):
+		print(f'link 1,{freePage+1} to sector 1,{freePage} at {freePage*256}')
+		# link to the next one
+		image[freePage*256] = 1
+		image[freePage*256+1] = freePage+1
+		freePage = freePage + 1
 	# return first free page (1,3) = (1-1)*128+3 = 3
-	return 3
+	return freePage+1 # why +1?
 
 
 def writeImageChunks(image, nbanks, prefix = "image"):
@@ -113,31 +141,25 @@ def writeImageChunks(image, nbanks, prefix = "image"):
 		outfile.write(image[k*0x4000:(k+1)*0x4000])
 		outfile.close()
 
+def copyDirEntry(image, nFiles, dirEntry):
+	# directory blocks start on page 2 and there is enough of them to hold all the files
+	offs = 0x200 + nFiles*32 + 2
+	image[offs:offs+30] = dirEntry[0:30]
+
 ######### MAIN
 
 # buffer to hold the data
 image = bytearray(nbanks * 0x4000)
 
 # format image and return first free page
-freePage = formatImage(image,nbanks)
-# there are no files in the image (up to 8)
+freePage = formatImage(image,nbanks,len(cvtfiles))
+
+#cvtfiles = []
+
+print(f'{len(cvtfiles)} to import')
+
+# there are no files in the image yet
 nFiles = 0
-
-def copyDirEntry(image, nFiles, dirEntry):
-	# directory block on page 2
-	offs = 0x200 + nFiles*32 + 2
-	image[offs:offs+30] = dirEntry[0:30]
-
-
-# load files
-cvtfiles = [
-     "../apps/cc65/geosver/geosver.cvt"
-    ,"../apps/cc65/getid/getid.cvt"
-    ,"../apps/cc65/filesel/filesel.cvt"
-    ,"../apps/cvt/FontView.cvt"
-    ,"../apps/cvt/Yahtzee.cvt"
-]
-
 for fname in cvtfiles:
 	print(f'Processing {fname}')
 	with open(fname,"rb") as f:

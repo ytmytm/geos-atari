@@ -49,6 +49,16 @@ cvtfiles = [
     ,"ALIEN.cvt"
     ]
 
+cvtfiles = [
+     "../apps/cc65/filesel/filesel.cvt"
+    ,"../apps/cvt/desktop.cvt"
+    ,"ANDROMEDA.cvt"
+#    ,"ALIEN.cvt"
+    ,"../apps/cvt/Yahtzee.cvt"
+    ,"../apps/cvt/FontView.cvt"
+    ]
+
+
 ################## const.inc
 
 # directory
@@ -97,16 +107,13 @@ def formatImage(image, nbanks, nfiles=8, diskname="RAMDISKWITKOWIAKAAAAAAAA", di
 	# to make it simple write (ff) into every 2nd byte in a block, no need for clear & write
 	for k in range(1,nbanks*64):
 		image[k*256+2] = 0xff
-#		image[k*256+3] = (k & 0xff00) >> 8	# page number marker for debug
-#		image[k*256+4] = k & 0xff
 	# init disk header at (1,0)
 	# - disk name+id + $a0 padding
 	# - BAM (according to nbanks)
 	# - geos format string
-	# - border sector at (1,1)
-	# - first directory sector at (1,2)
-	# - allocate (1,0),(1,1),(1,2) in BAM already
-	# - setup link from (1,0) to (1,2)
+	# - first directory sector at (1,1) (required because of DESK TOP)
+	#   as many directory sectors as needed to accomodate files
+	# - border sector
 
 	# padding
 	image[OFF_DISK_NAME:OFF_DISK_NAME+16+13] = (16+13)*[0xa0]
@@ -119,16 +126,11 @@ def formatImage(image, nbanks, nfiles=8, diskname="RAMDISKWITKOWIAKAAAAAAAA", di
 	# BAM (all free)
 	for k in range(int(nbanks*64/8)):
 		image[OFF_TO_BAM+k] = 0xff
-	# allocate first 3 sectors on track 0 (head, border, 1st dir)
-#	image[OFF_TO_BAM] = image[OFF_TO_BAM] & 0b11111000
 	# link dir head to 1st dir sector at (1,2)
 	image[0] = 1
 	image[1] = 1
 	freePage = 2 # 0,1 already occupied
 	needDirSectors = int(nfiles/8)
-#	if needDirSectors == 0:
-#		freePage = freePage+1
-#		needDirSectors = 1
 	print(f'need {needDirSectors} for directory')
 	for k in range(0,needDirSectors):
 		print(f'link 1,{freePage+1} to sector 1,{freePage} at {freePage*256}')

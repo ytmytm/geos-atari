@@ -202,7 +202,7 @@ _ResetHandle:
 	LDY #8
 	STY curDevice
 	STY curDrive
-	LDA #DRV_1581 | $80		; RAM 1581
+	LDA #DRV_1541 | $80		; RAM 1541 (DESKTOP will check track 18 for directory)
 	STA _driveType,y
 
 	; XXX this needs to stay here until DoDlgBox is ready to be Panic() call

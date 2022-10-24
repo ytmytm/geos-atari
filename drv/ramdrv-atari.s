@@ -18,6 +18,10 @@
 ; XXX there is no check/support for >320K expansions
 ;     (no curDir2Head/curDir3Head)
 
+; note: because of DESK TOP 64 that forces use of track 18 (for 1541/71) or 40 (for 1581)
+;       track 18 is mapped in InitForRAM into track 1
+;       also the directory chain has to start on (18,1); for RAM 1581 it would have to start on (40,3)
+
 RAM_DIR_TRACK		= 1
 RAM_DIR_SECT_HEAD	= 0
 
@@ -535,8 +539,14 @@ InitForRAM:	MoveW r1, tmpR1
 		; calculate bank number from t&s in r1
 		; vector z8b to point inside ATARI_EXPBASE
 
+		; especially for DESK TOP 64 map track 18 to track 1 (change to 40 if faking RAM 1581 instead)
+		; XXX not needed if working with 1MB of RAM
+		CmpBI r1L, DIR_TRACK
+		bne :+
+		LoadB r1L, 1
+
 		; there is no track 0
-		DEC r1L
+:		DEC r1L
 		; convert to page address (note reversed L/H) - bring 1st bit of L into last bit of H
 		ASL r1H
 		LSR r1L

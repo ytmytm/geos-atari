@@ -1,16 +1,26 @@
 
+SYSTEM      ?= atari130
 VARIANT     ?= atari
-DRIVE       ?= drv1541
-INPUT       ?= joydrv
+DRIVE       ?= ramdrv_atari
+INPUT       ?= joydrv_atari
 
 AS           = ca65
 LD           = ld65
-C1541        = c1541
-PUCRUNCH     = pucrunch
-EXOMIZER     = exomizer
 
-ifeq ($(VARIANT), atari)
-XEX_RESULT = GEOS.XEX
+ATARI_BANKS ?= 4
+
+ifeq ($(SYSTEM), atari130)
+VARIANT      = atari
+ATARI_BANKS  = 4
+BUILD        = atari_130
+XEX_RESULT   = GEOS_ATARI_130XE.XEX
+endif
+
+ifeq ($(SYSTEM), atari320)
+VARIANT      = atari
+ATARI_BANKS  = 16
+BUILD        = atari_320
+XEX_RESULT   = GEOS_ATARI_320K.XEX
 endif
 
 ASFLAGS      = -I inc -I .
@@ -158,7 +168,7 @@ endif
 KERNAL_OBJS=$(KERNAL_SOURCES:.s=.o)
 ALL_OBJS=$(KERNAL_OBJS)
 
-BUILD_DIR=build/$(VARIANT)
+BUILD_DIR=build/$(BUILD)
 
 PREFIXED_KERNAL_OBJS = $(addprefix $(BUILD_DIR)/, $(KERNAL_OBJS))
 
@@ -173,6 +183,7 @@ endif
 
 clean:
 	rm -rf build
+	rm -rf kernal/hw/ramloader.s kernal/kernal_*.cfg.out
 
 ifeq ($(VARIANT), atari)
 $(BUILD_DIR)/$(XEX_RESULT): $(ALL_BINS)
@@ -183,13 +194,22 @@ endif
 .EXPORT_ALL_VARIABLES:
 	export
 
+$(BUILD_DIR)/image00.img:
+	tools/mkramdisk.py -n $(ATARI_BANKS) -o $(BUILD_DIR)/image ramdisk/cvt/*
+
+kernal/hw/ramloader.s: kernal/hw/ramloader.s.in $(BUILD_DIR)/image00.img
+	cat $< | gcc -D __ATARI_BANKS=$(ATARI_BANKS) -D __BUILD_DIR=\"$(BUILD_DIR)\" -E - -o - | sed -e 's/^#/;/g' > $@
+
 $(BUILD_DIR)/%.o: %.s
 	@mkdir -p `dirname $@`
-	$(AS) -D $(VARIANT)=1 -D $(DRIVE)=1 -D $(INPUT)=1 $(ASFLAGS) $< -o $@
+	$(AS) -D $(VARIANT)=1 -D __ATARI_BANKS=$(ATARI_BANKS) $(ASFLAGS) $< -o $@
 
-$(BUILD_DIR)/kernal/kernal.bin: $(PREFIXED_KERNAL_OBJS) kernal/kernal_$(VARIANT).cfg
+kernal/kernal_$(VARIANT).cfg.out: kernal/kernal_$(VARIANT).cfg
+	cat $< | sed -e 's/#.*//g' | sed -e 's/^.if/#if/g' | sed -e 's/^.endif/#endif/g' | gcc -D __ATARI_BANKS=$(ATARI_BANKS) -E - -o $@
+
+$(BUILD_DIR)/kernal/kernal.bin: $(PREFIXED_KERNAL_OBJS) kernal/kernal_$(VARIANT).cfg.out
 	@mkdir -p $$(dirname $@)
-	$(LD) -C kernal/kernal_$(VARIANT).cfg $(PREFIXED_KERNAL_OBJS) -o $@ -m $(BUILD_DIR)/kernal/kernal.map -Ln $(BUILD_DIR)/kernal/kernal.lab
+	$(LD) -C kernal/kernal_$(VARIANT).cfg.out $(PREFIXED_KERNAL_OBJS) -o $@ -m $(BUILD_DIR)/kernal/kernal.map -Ln $(BUILD_DIR)/kernal/kernal.lab
 
 # a must!
 love:	

@@ -19,13 +19,42 @@
 .global RamLoaderLastChunk
 
 .segment "rambank0"
-.incbin "../../tools/image00.bin"
+.incbin .concat(__BUILD_DIR,"/image00.bin")
 
 .segment "rambank1"
-.incbin "../../tools/image01.bin"
+.incbin .concat(__BUILD_DIR,"/image01.bin")
 
 .segment "rambank2"
-.incbin "../../tools/image02.bin"
+.incbin .concat(__BUILD_DIR,"/image02.bin")
+
+.if __ATARI_BANKS>4
+
+.segment "rambank3"
+.incbin .concat(__BUILD_DIR,"/image03.bin")
+.segment "rambank4"
+.incbin .concat(__BUILD_DIR,"/image04.bin")
+.segment "rambank5"
+.incbin .concat(__BUILD_DIR,"/image05.bin")
+.segment "rambank6"
+.incbin .concat(__BUILD_DIR,"/image06.bin")
+.segment "rambank7"
+.incbin .concat(__BUILD_DIR,"/image07.bin")
+.segment "rambank8"
+.incbin .concat(__BUILD_DIR,"/image08.bin")
+.segment "rambank9"
+.incbin .concat(__BUILD_DIR,"/image09.bin")
+.segment "rambanka"
+.incbin .concat(__BUILD_DIR,"/image0a.bin")
+.segment "rambankb"
+.incbin .concat(__BUILD_DIR,"/image0b.bin")
+.segment "rambankc"
+.incbin .concat(__BUILD_DIR,"/image0c.bin")
+.segment "rambankd"
+.incbin .concat(__BUILD_DIR,"/image0d.bin")
+.segment "rambanke"
+.incbin .concat(__BUILD_DIR,"/image0e.bin")
+
+.endif
 
 .segment "ramloader"
 

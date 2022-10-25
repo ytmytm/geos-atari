@@ -318,7 +318,7 @@
 
 .macro DecW addr
 	.local @j
-	BIT addr
+	LDA addr
 	BNE @j
 	DEC addr+1
 @j:	DEC addr

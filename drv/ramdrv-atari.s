@@ -235,8 +235,11 @@ FreeBlk0:	LDX #BAD_BAM
 ;---------------------------------------
 __FindBAMBit:
 		PushW r6
+		CmpBI r6L, DIR_TRACK		; is that DESK TOP trying to allocate from the middle of the disk?
+		bne :+
+		LoadB r6L, 1			; map it to track 1 anyway
 ; there is no track 0
-		DEC r6L
+:		DEC r6L
 ; convert to page address (note reversed L/H) - bring 1st bit of L into last bit of H
 		ASL r6H
 		LSR r6L

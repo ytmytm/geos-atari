@@ -286,6 +286,18 @@ _EnablSprite:
 	and #%11111100			; support only 0-3
 	bne :+
 
+	; just in case this is destroyed
+;	LoadB ANTIC_PMBASE, >GEOS_PMBASE
+;	LoadB ANTIC_DMACTL, %00111010		; DL DMA, 1scanline PMG, P DMA, no M DMA, normal playfield
+;	LoadB GTIA_GRACTL,  %00000010		; don't latch joystick triggers, P DMA, no M DMA
+	; restore these registers, GeoWrite will overwrite them
+	LoadB GTIA_PRIOR,   %00000001		; priority, pm0 then pm2, then playfield
+	LoadB GTIA_SIZEP0,  %00000000		; no X stretch
+	sta GTIA_SIZEP1
+;	LoadB GTIA_COLPM0,  $3c			; hue/lum
+;	LoadB GTIA_COLPM1,  $c4			; hue/lum
+
+
 	ldx r3L
 	lda #$ff
 	cmp curEnable,x

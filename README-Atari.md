@@ -29,23 +29,11 @@ Many of these issues were later corrected for GEOS 128 due to 80-column mode sup
 
 ## Quickstart
 
-Download GEOS.XEX from the Releases section. This file contains RAM disk image, GEOS Kernal, disk driver, input driver and loader for the whole thing.
+Download one of the XEX files from the Releases section. Such file contains RAM disk image, GEOS Kernal, disk driver, input driver and loader for the whole thing.
 
-Run emulator and make sure to choose PAL system with at least 128K of RAM. Setup joystick in port 1. Load the GEOS.XEX file into emulator.
+Run emulator and make sure to choose PAL system with at least 128K/320K of RAM. Setup joystick in port 1. Load the XEX file into emulator.
 
-First there will be a message about detected RAM disk. RAM disk contents are loaded first from the XEX file.
-This code may be reused eventually for quick reboot. Right now it's annoying but it shows how many memory banks (16K each) will be used for
-RAM disk. Choose 'No' - don't reformat RAM disk yet.
-
-Next you wil see some leftovers from graphics routines tests.
-
-Then play with the menu. Try to type something or click on icons.
-
-Finally: 'quit' will return to Basic, and 'file'->'DeskTop' will try to exit the boot application
-and enter DeskTop.
-
-But there is no DeskTop. Instead a 'filesel' application will load where you can choose which next application to load and run. If you quit that new application you
-will return to 'filesel' our temporary DeskTop replacement.
+GEOS will boot into DeskTop in just few seconds.
 
 ## Atari port remarks
 
@@ -58,21 +46,24 @@ Order of segments is also rearranged to make the best use of available memory se
 
 Well-beaved applications that run on both GEOS 64 and GEOS 128 (in 80-column mode) should also run on Atari.
 
-Note that DESK TOP from GEOS 64 *is not* such application - Atari will need its own file manager.
+BSW's own applications are not that well behaved. They write to VIC registers directly and use [custom screen recovery](https://www.pagetable.com/?p=1428) to save some RAM, but that recovery routine works on bitmap in VIC format.
+
+You will have better luck trying out random GEOS software from 3rd party developers rather than running BSW flagship products. It shouldn't be too hard to patch some of the big applications (GeoPaint, GeoWrite and friends) to make them work in a reasonable way.
 
 Compatibility problems come from:
 
-    - hardware differences (Atari Players vs VIC sprites, POKEY vs SID)
-    - memory map changes (hires bitmap screen with different organization for ANTIC than for VIC)
-    - missing capatibilities (24-pixel wide sprites, color matrix for hires mode)
+- hardware differences (Atari Players vs VIC sprites, POKEY vs SID)
+- memory map changes (hires bitmap screen with different organization for ANTIC than for VIC)
+- missing capatibilities (24-pixel wide sprites, color matrix for hires mode)
 
 Programs will not work correctly if:
 
-    - they use sprites or change their colors (e.g. Preferences Manager)
-    - they change color matrix in 40-column mode (e.g. DESK TOP)
-    - they require REU
-    - they access bitmap screen in 40-column mode directly (e.g. Maverick)
-    - they write directly to I/O registers (e.g printer drivers)
+- they use sprites or change their colors (e.g. Preferences Manager)
+- they change color matrix in 40-column mode (e.g. DESK TOP)
+- they require REU
+- they access bitmap screen in 40-column mode directly (e.g. Maverick)
+- they have custom recovery routine (e.g. GeoWrite)
+- they write directly to I/O registers (e.g printer drivers)
 
 They may not work at all or show some graphical glitches. For example, if an application tries to add some color it will write to `COLOR_MATRIX` space, which is now occupied by Player0/1/2/3 data, so mouse pointer will be temporarily overwritten.
 
@@ -88,10 +79,8 @@ All the rectangle functions (*Rectangle*, *InvertRectangle*, *ImprintRectangle*,
 
 ### System startup
 
-Atari GEOS boots into a debug app with some graphics, menu and icon demo. Also the text prompt is active - try to type something.
-
-This is not the proper startup yet - it should at least try to run Auto-Exec applications from RAM disk. In order to do it, the code has to be moved into higher memory area
-(at least over $5000 out of current $2000).
+The boot code jumps right into DeskTop, but it should at least try to run Auto-Exec applications from RAM disk.
+In order to do it, that code has to be moved into higher memory area (at least over $5000 out of current $2000).
 
 ### Players (sprites)
 
@@ -108,10 +97,8 @@ There are severe memory constraints. GEOS on C64 uses all available memory (64K)
 
 Atari has less RAM available because it can't switch off I/O and allocates whole 1K of RAM for sprites (Players).
 
-Because of that:
-
-    - part of space reserved for disk driver is now occupied by Kernal code - about 5 pages
-    - a little bit of Kernal code resides in banked memory in bank 0
+Because of that part of space reserved for disk driver is now occupied by Kernal code (about 5 pages) and
+a little bit of Kernal code resides in banked memory in bank 0.
 
 If a real disk driver comes (hint, hint) then some better separation and Kernal code banking (like on C128 in bank0 and under I/O space)
 is needed. Probably graphics functions are best fit for that. Since $6000-$7FFF is used as a screen back buffer this means only $4000-$5FFF would be
@@ -155,19 +142,18 @@ the system for using ROM routines for I/O. GEOS doesn't touch memory in $0200-$0
 
 The requirements for a disk driver are:
 
-    - it needs to read/write 256-byte sectors at a time
-    - sectors are addressed by 8-bit track and sector numbers
-    - if a device responds to an identifier (disk drive number) it should be possible to change that identifier (DESK TOP uses this feature to swap third drive with one of the first two, but it's purely UI issue, not a system requirement)
+- it needs to read/write 256-byte sectors at a time
+- sectors are addressed by 8-bit track and sector numbers
+- if a device responds to an identifier (disk drive number) it should be possible to change that identifier (DESK TOP uses this feature to swap third drive with one of the first two, but it's purely UI issue, not a system requirement)
 
 GEOS Kernal implements on top of that a Commodore DOS-like file system. Track number 0 is forbidden, so the largest possible disk/partition (see my [CIAIDE project](https://github.com/ytmytm/c64-ciaide)) may have
 up to 255 tracks, 256 sectors each for a total of almost 16MB.
 
 Current RAM drive implementation:
 
-    - uses expanded memory that starts in bank 1, bank 0 is reserved for GEOS Kernal
-    - number of tracks is calculated during boot, according to amount of expanded memory
-    - uses tracks with 128 sectors each
-    - is limited in size because it uses only one sector as a directory header
+- uses expanded memory that starts in bank 1, bank 0 is reserved for GEOS Kernal
+- uses tracks with 128 sectors each
+- DeskTop ignores track&sector information for disk directory so track 18 (directory) is mapped to track 1
 
 ### Printer drivers
 
@@ -176,6 +162,8 @@ There are none, they will have to be ported. See Disk Drive section for notes ab
 ### Time and date
 
 There is no CIA time-of-day (TOD) clock, timekeeping is done by counting vertical blank interrupts. During banked operations a short interrupt routine is called and some of these events may be lost.
+
+Clock in DeskTop doesn't work, my guess is that DeskTop tries to read CIA registers directly.
 
 There is no support for alarm clock. It's tied to CIA TOD clock hardware feature.
 The system doesn't provide any function to set the alarm (it's done in hardware by a Desk Accessory) you can only choose if/how it should react to the alarm.
@@ -189,21 +177,13 @@ It's best to use Linux or WSL for that.
 
 Install Python3 and cc65 suite and then:
 
-    - run Makefile from cc65/apps (this will build filesel.cvt)
-    - run mkramdisk.py from tools/ folder (this will build tools/image*.bin files with RAM disk)
-    - run top-level Makefile to assemble system and link it into XEX file
+- if you like, run Makefile from `cc65/apps` (this will build filesel.cvt - tiny application launcher for DeskTop replacement among others)
+- put the CVT files that you want to have in the system into `ramdisk/cvt/`
+- run top-level Makefile to assemble system and link it into XEX file
 
-The result is in build/atari/GEOS.XEX
+By default Makefile will produce file for a system with 128K (130XE). For more, pass `SYSTEM=atari320` option:
+```
+make SYSTEM=atari320
+```
 
-You can try to put some new GEOS apps in CVT format (GEOS files converted to PRG (binary stream)) - just modify tools/mkramdisk.py and list them there.
-
-### Going beyond 128K RAM disk
-
-You would have to modify tools/mkramdisk.py and change the number of banks.
-
-You would also have to modify linker script kernal/kernal_atari.cfg and add more RAM memory areas (beyond RAM0/1/2) mention them with initad in order (but before START) in FORMATS section
-and list memory segments that are loaded into those memory areas.
-
-Finally change kernal/hw/ramloader.s and list new segments with *.incbin* commands for more chunks to be loaded into banks.
-
-In the future this will be handled by the main Makefile.
+The result is in `build/<atari system>/GEOS<atari system>.XEX` file, ready to be used with an emulator.

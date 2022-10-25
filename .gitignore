@@ -8,3 +8,6 @@ tools/*.bin
 *.grcs
 *.grco
 apps/cc65/*/*.[s,o]
+*.out
+kernal/hw/ramloader.s
+ramdisk/cvt-ignore/*

@@ -6,59 +6,10 @@
 # (segments RAM0/RAM1/.. from kernal/kernal_atari.cfg)
 # files need to be inclded by incbin in kernal/ramexp/ramexp1.s
 
-# - no command line args
-#   - number of banks (3 or 15)
-#   - cvt files paths
-#   - output path (for build/atari/ from top-level Makefile)
-
 # number of available memory banks-1
 # 3  for 128K (130XE)
 # 15 for 256K (320K)
-# more unsupported (needs changes both here and in the disk driver - where to put BAM2/BAM3)
-# this will be created out of a command line option
-
-nbanks = 3
-outfileprefix = "image"
-
-# load files
-cvtfiles = [
-     "../apps/cc65/geosver/geosver.cvt"
-    ,"../apps/cc65/getid/getid.cvt"
-    ,"../apps/cc65/filesel/filesel.cvt"
-    ,"../apps/cvt/FontView.cvt"
-    ,"../apps/cvt/Yahtzee.cvt"
-    ,"../apps/cvt/quick dateset.cvt"
-    ,"../apps/cvt/maverick s.e..cvt"
-    ,"../apps/cvt/dirmanager.cvt"
-    ,"../apps/cvt/Desk Organizer.cvt"
-    ,"../apps/cvt/geoPack-2_1.cvt"
-    ,"../apps/cvt/convert3.0.cvt"
-    ,"../apps/cvt/listmaker.cvt"
-#    ,"../apps/cvt/geotype.cvt"
-]
-
-cvtfiles = [
-     "../apps/cc65/geosver/geosver.cvt"
-    ,"../apps/cc65/getid/getid.cvt"
-    ,"../apps/cc65/filesel/filesel.cvt"
-    ,"../apps/cvt/FontView.cvt"
-    ,"../apps/cvt/Yahtzee.cvt"
-    ,"../apps/cvt/a.cvt"
-    ,"../apps/cvt/HeaderEditor-1.1.cvt"
-    ,"ANDROMEDA.cvt"
-    ,"ALIEN.cvt"
-    ]
-
-cvtfiles = [
-     "../apps/cc65/filesel/filesel.cvt"
-    ,"../apps/cvt/desktop.cvt"
-    ,"ANDROMEDA.cvt"
-#    ,"ALIEN.cvt"
-    ,"../apps/cvt/Yahtzee.cvt"
-    ,"../apps/cvt/FontView.cvt"
-    ,"calculator.cvt"
-    ]
-
+# more is unsupported (will needs changes both here and in the disk driver - where to put BAM2/BAM3)
 
 ################## const.inc
 
@@ -160,21 +111,18 @@ def copyDirEntry(image, nFiles, dirEntry):
 	offs = 0x100 + nFiles*32 + 2
 	image[offs:offs+30] = dirEntry[0:30]
 
-######### MAIN
+def allocateUntilPage(image,lastPage):
+	# allocate until freepage in BAM
+	#  full bytes (8 pages)
+	fullBytes = int(lastPage/8)
+	for n in range(fullBytes):
+		image[OFF_TO_BAM+n] = 0
+	k = lastPage - 8*fullBytes
+	#  last incomplete byte
+	if (k!=0):
+		image[OFF_TO_BAM+fullBytes] = (0x100 - (1 << k)) & 0xff
 
-# buffer to hold the data
-image = bytearray(nbanks * 0x4000+1)		# why +1? is that right?
-
-# format image and return first free page
-freePage = formatImage(image,nbanks,len(cvtfiles))
-
-#cvtfiles = []
-
-print(f'{len(cvtfiles)} files to import')
-
-# there are no files in the image yet
-nFiles = 0
-for fname in cvtfiles:
+def writeCVTFile(image,fname,freePage,nFiles):
 	print(f'{fname}')
 	with open(fname,"rb") as f:
 		direntry = bytearray(f.read(254))
@@ -185,7 +133,7 @@ for fname in cvtfiles:
 		signature = (direntry[33:34+21].decode('ascii') == ' formatted GEOS file V')
 		if not signature:
 			print(f'{fname} is not a GEOS Converted file, skipping')
-			continue
+			return(nFiles,freePage)
 		datachunks = []
 		for n in range(int(len(data)/254)+1):
 			datachunks.append(data[n*254:(n+1)*254])
@@ -223,38 +171,57 @@ for fname in cvtfiles:
 			freePage = freePage+1
 		# copy direntry into directory
 		copyDirEntry(image,nFiles,direntry)
-		nFiles = nFiles+1
 		# data was stored in one run, now go back and adjust VLIR chains if needed
-		if not isVLIR:
-			continue
-		print(f"\tadjusting VLIR chains, record block on page ${format(recordPage,'04x')}")
-		offs = page_to_offset(recordPage)
-		filePage = recordPage+1
-		image[offs] = 0
-		image[offs+1] = 0xff
-		offs = offs + 2
-		for chain in range(0,127):
-			if image[offs]>0:
-				npages = image[offs]
-				lastbyte = image[offs+1]
-				print(f'\tfound chain {chain} at {format(filePage,"04x")} ({npages} long, last byte {lastbyte})')
-				image[offs:offs+2] = page_to_ts(filePage)	# adjust record pointer
-				filePage = filePage + npages
-				offs_chain = page_to_offset(filePage-1)
-				image[offs_chain] = 0
-				image[offs_chain+1] = lastbyte			# adjust last sector - last used byte (we don't keep earlier value because on RAM disk the interleave is 1, next chunk starts in the following page)
-			offs = offs+2
+		if isVLIR:
+			print(f"\tadjusting VLIR chains, record block on page ${format(recordPage,'04x')}")
+			offs = page_to_offset(recordPage)
+			filePage = recordPage+1
+			image[offs] = 0
+			image[offs+1] = 0xff
+			offs = offs + 2
+			for chain in range(0,127):
+				if image[offs]>0:
+					npages = image[offs]
+					lastbyte = image[offs+1]
+					print(f'\tfound chain {chain} at {format(filePage,"04x")} ({npages} long, last byte {lastbyte})')
+					image[offs:offs+2] = page_to_ts(filePage)	# adjust record pointer
+					filePage = filePage + npages
+					offs_chain = page_to_offset(filePage-1)
+					image[offs_chain] = 0
+					image[offs_chain+1] = lastbyte			# adjust last sector - last used byte (we don't keep earlier value because on RAM disk the interleave is 1, next chunk starts in the following page)
+				offs = offs+2
+	return (nFiles+1,freePage)
 
-print(f"last available page is {format(freePage,'04x')} out of {format(nbanks*64,'04x')}, {format(nbanks*64-freePage,'04x')} sectors remaining")
+######### MAIN
 
-# allocate until freepage in BAM
-#  full bytes (8 pages)
-fullBytes = int(freePage/8)
-for n in range(fullBytes):
-	image[OFF_TO_BAM+n] = 0
-k = freePage - 8*fullBytes
-#  last incomplete byte
-if (k!=0):
-	image[OFF_TO_BAM+fullBytes] = (0x100 - (1 << k)) & 0xff
+import argparse
 
-writeImageChunks(image, nbanks, outfileprefix)
+import pdb
+
+parser = argparse.ArgumentParser(description='Build RAM disk image for Atari GEOS')
+parser.add_argument('files',metavar='FILE.CVT',type=str,nargs='+',help=".cvt files to be copied")
+parser.add_argument('--outfile','-o',metavar='IMAGE',type=str,help="output file name prefix",default="image")
+parser.add_argument('--nbanks','-n',type=int,help="number of memory banks (16K each), 3 for 130XE, 15 for 320K",default=3,choices=[3,15])
+
+args = parser.parse_args()
+
+# mutable buffer to hold the data
+image = bytearray(args.nbanks * 0x4000+1)		# why +1? is that right?
+
+# format image and return first free page
+freePage = formatImage(image,args.nbanks,len(args.files))
+
+print(f'{len(args.files)} files to import')
+
+# there are no files in the image yet
+nFiles = 0
+for fname in args.files:
+	(nFiles,freePage) = writeCVTFile(image,fname,freePage,nFiles)
+
+print(f'{nFiles} imported')
+
+print(f"last available page is {format(freePage,'04x')} out of {format(args.nbanks*64,'04x')}, {format(args.nbanks*64-freePage,'04x')} sectors remaining")
+
+allocateUntilPage(image,freePage)
+
+writeImageChunks(image, args.nbanks, args.outfile)

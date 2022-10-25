@@ -46,14 +46,4 @@ REUDskDrvSPC    =    $8300                      ; base for 4*DISK_DRV_LGH disk d
 ;useRamExp = 1
 .endif
 
-.if .defined(drv1541)
-DRV_TYPE = 1 ; DRV_1541
-.elseif .defined(drv1571)
-DRV_TYPE = 2; DRV_1571
-.elseif .defined(drv1581)
-DRV_TYPE = 3; DRV_1581
-.else
-.error "Unknown drive type!"
-.endif
-
 .endif

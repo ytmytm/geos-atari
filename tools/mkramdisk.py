@@ -4,12 +4,13 @@
 
 # this tool will build 3 or 15 chunks of 16K blocks that are loaded into expanded RAM
 # (segments RAM0/RAM1/.. from kernal/kernal_atari.cfg)
-# files need to be inclded by incbin in kernal/ramexp/ramexp1.s
+# files need to be included by incbin in kernal/hw/ramloader.s
 
 # number of available memory banks-1
 # 3  for 128K (130XE)
 # 15 for 256K (320K)
-# more is unsupported (will needs changes both here and in the disk driver - where to put BAM2/BAM3)
+# more is unsupported (will need changes both here and in the disk driver - where to put BAM2/BAM3)
+# best idea would be to mimic 1581
 
 ################## const.inc
 
@@ -51,7 +52,7 @@ def offset_to_page(offs):
 def offset_to_ts(offs):
 	return page_to_ts(offset_to_page(offs))
 
-def formatImage(image, nbanks, nfiles=8, diskname="RAMDISKWITKOWIAKAAAAAAAA", diskid="64"):
+def formatImage(image, nbanks, nfiles=8, diskname="RAMDISK", diskid="64"):
 	# format:
 	# convert parameters to ascii and trim
 	diskname = bytes(diskname.encode('ascii'))[0:16]
@@ -94,13 +95,13 @@ def formatImage(image, nbanks, nfiles=8, diskname="RAMDISKWITKOWIAKAAAAAAAA", di
 	freePage = freePage+1
 	image[OFF_OP_TR_SC] = 1
 	image[OFF_OP_TR_SC+1] = freePage
-	# return first free page (1,3) = (1-1)*128+3 = 3
+	# return first free page available for files
 	freePage = freePage+1
 	return freePage
 
 
 def writeImageChunks(image, nbanks, prefix = "image"):
-	# write the outputs
+	# write the outputs, split into 16K
 	for k in range(nbanks):
 		outfile = open(f'{prefix}{format(k,"02x")}.bin',"wb")
 		print(f'writing {format(k,"02x")} from ${format(k*0x4000,"04x")} to ${format((k+1)*0x4000,"04x")}')
@@ -113,7 +114,7 @@ def copyDirEntry(image, nFiles, dirEntry):
 	image[offs:offs+30] = dirEntry[0:30]
 
 def allocateUntilPage(image,lastPage):
-	# allocate until freepage in BAM
+	# allocate sectors in BAM until lastPage
 	#  full bytes (8 pages)
 	fullBytes = int(lastPage/8)
 	for n in range(fullBytes):
@@ -141,7 +142,7 @@ def writeCVTFile(image,fname,freePage,nFiles):
 		print(f'\t{len(datachunks)} sectors')
 #		for n in range(len(datachunks)):
 #			print(f'chunk {n} has {len(datachunks[n])} bytes')
-		# store header on first free page
+		# store header on the first free page
 		offs = page_to_offset(freePage)+2
 		image[offs:offs+254] = header
 		# store header t&s in direntry
@@ -160,7 +161,7 @@ def writeCVTFile(image,fname,freePage,nFiles):
 		sizelo = 1+len(datachunks) - sizehi*256
 		direntry[OFF_SIZE] = sizelo
 		direntry[OFF_SIZE+1] = sizehi
-		# store data on following pages
+		# store data on the following pages
 		for n in range(len(datachunks)):
 			offs = page_to_offset(freePage)+2
 			if (n+1 == len(datachunks)): # if last block - last used byte in that block
@@ -211,7 +212,7 @@ args.nbanks = args.nbanks - 1                           # skip bank 0
 # mutable buffer to hold the data
 image = bytearray(args.nbanks * 0x4000+1)		# why +1? is that right?
 
-# format image and return first free page
+# format image and return the first free page for files
 freePage = formatImage(image,args.nbanks,len(args.files))
 
 print(f'{len(args.files)} files to import')
@@ -228,3 +229,4 @@ print(f"last available page is {format(freePage,'04x')} out of {format(args.nban
 allocateUntilPage(image,freePage)
 
 writeImageChunks(image, args.nbanks, args.outfile)
+

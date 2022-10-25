@@ -201,9 +201,11 @@ import pdb
 parser = argparse.ArgumentParser(description='Build RAM disk image for Atari GEOS')
 parser.add_argument('files',metavar='FILE.CVT',type=str,nargs='+',help=".cvt files to be copied")
 parser.add_argument('--outfile','-o',metavar='IMAGE',type=str,help="output file name prefix",default="image")
-parser.add_argument('--nbanks','-n',type=int,help="number of memory banks (16K each), 3 for 130XE, 15 for 320K",default=3,choices=[3,15])
+parser.add_argument('--nbanks','-n',type=int,help="number of memory banks (16K each), 4 for 130XE, 16 for 320K",default=4,choices=[4,16])
 
 args = parser.parse_args()
+
+args.nbanks = args.nbanks - 1                           # skip bank 0
 
 # mutable buffer to hold the data
 image = bytearray(args.nbanks * 0x4000+1)		# why +1? is that right?

@@ -18,9 +18,7 @@ void main (void)
 {
     r0=(int)fName;
 
-    DlgBoxOk(CBOLDON "You now will be presented", "with an apps list" CPLAINTEXT);
     DlgBoxFileSelect("", APPLICATION, fName);
-    DlgBoxOk("You've chosen:" CBOLDON, fName);
 
     GetFile(0, fName, NULL, NULL, NULL);
 

@@ -140,7 +140,7 @@ relocate:
 _ResetHandle:
 
 	; atari ramloader does setup before
-:	sei
+	sei
 	cld
 	ldx #$FF
 	txs
@@ -204,6 +204,8 @@ _ResetHandle:
 	STY curDrive
 	LDA #DRV_1541 | $80		; RAM 1541 (DESKTOP will check track 18 for directory)
 	STA _driveType,y
+	lda #1
+	sta NUMDRV
 
 	; XXX this needs to stay here until DoDlgBox is ready to be Panic() call
 	;LoadW BRKVector, _BRKHandler	; InitRam would make this Panic, but we don't have Panic yet
@@ -216,6 +218,8 @@ _ResetHandle:
 	;; with override for EnterDeskTop jumptable address to come back here
 
 	jsr ClrScr
+
+	jmp EnterDeskTop
 
 ;;
 jsr testDiskOps
@@ -758,18 +762,6 @@ goLoop:
 jmp @loop
 
 ; normal boot would fall-in here
-; XXX todo atari: setup 1 drive, RAM type
-	lda #1
-	sta NUMDRV
-	ldy $BA
-	sty curDrive
-	lda #DRV_TYPE ; see config.inc
-	sta curType
-	sta _driveType,y
-.ifdef useRamExp
-; XXX todo atari: this should happen earlier, before relocate, maybe during XEX chunk load
-	jsr DetectRamExp
-.endif
 
 OrigResetHandle:
 	sei

@@ -131,7 +131,7 @@ def writeCVTFile(image,fname,freePage,nFiles):
 		data     = bytearray(f.read(-1))
 		print(f'\ttotal data has {len(data)} bytes')
 #		print(f'{direntry[33:34+21].decode("ascii")}')
-		signature = (direntry[33:34+21].decode('ascii') == ' formatted GEOS file V')
+		signature = (direntry[33:34+19].decode('ascii') == ' formatted GEOS file')
 		if not signature:
 			print(f'{fname} is not a GEOS Converted file, skipping')
 			return(nFiles,freePage)

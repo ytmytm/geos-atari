@@ -8,14 +8,20 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
+.include "atari.inc"
 
 .import _GetScanLine
+
+.import interrupt_lock
+.import atari_banks
 
 .global BitmapUpHelp
 .global BitmapDecode
 .global _BitmapUp
 
 .segment "graph3c"
+
+.warning "bitmapup.s - add assert that this can't be in banked space"
 
 ;---------------------------------------------------------------
 ; BitmapUp                                                $C142
@@ -46,14 +52,23 @@ BitmapUpHelp:			; render one row
 	MoveB r2L, r3H		; copy width to r3H (current column counter)
 	MoveB r1L, r9L		; copy xpos to r9L (current card offset)
 
+	LoadB interrupt_lock, $ff
+	MoveB PIA_PORTB, PIA_PORTB_SAVE
+
 :	jsr BitmapDecode
+	ldy atari_banks+0
+	sty PIA_PORTB
 	ldy r9L
 	sta (r5),y
 	sta (r6),y
+PIA_PORTB_SAVE = *+1
+	lda #0
+	sta PIA_PORTB
 	inc r9L
 	dec r3H
 	bne :-
 
+	LoadB interrupt_lock, 0
 	rts
 
 BitmapDecode:

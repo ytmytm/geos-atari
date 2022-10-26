@@ -8,25 +8,28 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
+.include "atari.inc"
 
-.import _HorizontalLine
-.import _InvertLine
-.import _RecoverLine
-.import _VerticalLine
-.import ImprintLine
+.import __HorizontalLine
+.import __InvertLine
+.import __RecoverLine
+.import __VerticalLine
+.import __ImprintLine
 
 .import __HorizontalLineDo
 .import __InvertLineDo
 .import __RecoverLineDo
-.import PrepareXCoord
+.import __PrepareXCoord
 
-.global _Rectangle
-.global _InvertRectangle
-.global _RecoverRectangle
-.global _ImprintRectangle
-.global _FrameRectangle
+.global __Rectangle
+.global __InvertRectangle
+.global __RecoverRectangle
+.global __ImprintRectangle
+.global __FrameRectangle
 
 .segment "graph2c"
+
+.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
 
 ;---------------------------------------------------------------
 ; Rectangle                                               $C124
@@ -38,7 +41,7 @@
 ; Return:    draws the rectangle
 ; Destroyed: a, x, y, r5 - r8, r11
 ;---------------------------------------------------------------
-_RecoverRectangle:
+__RecoverRectangle:
 	PushB r2L
 	sta r11L
 	sty r2L
@@ -47,12 +50,12 @@ _RecoverRectangle:
 	PushB dispBufferOn
 	ora #ST_WR_FORE | ST_WR_BACK
 	sta dispBufferOn
-	jsr PrepareXCoord
+	jsr __PrepareXCoord
 	PopB dispBufferOn
 	ldy #%01000000				; bit 6 = OP call recover line
 	bne DoRectangleLoop
 
-_ImprintRectangle:
+__ImprintRectangle:
 	PushB r2L
 	sta r11L
 	sty r2L
@@ -61,7 +64,7 @@ _ImprintRectangle:
 	PushB dispBufferOn
 	ora #ST_WR_FORE | ST_WR_BACK
 	sta dispBufferOn
-	jsr PrepareXCoord
+	jsr __PrepareXCoord
 	PopB dispBufferOn
 	lda r5L					; imprint is recover with source<->destination swapped
 	ldy r6L
@@ -74,11 +77,11 @@ _ImprintRectangle:
 	ldy #%01000000				; bit 6 = OP call recover line
 	bne DoRectangleLoop
 
-_Rectangle:
+__Rectangle:
 	ldy #0					; zero  = OP call horizontal line
 	beq _DoRectangle
 
-_InvertRectangle:
+__InvertRectangle:
 	ldy #%10000000				; bit 7 = OP call invert line
 ;	bne _DoRectangle
 
@@ -88,7 +91,7 @@ _DoRectangle:
 	sty r2L
 	PushW r3
 	PushW r4
-	jsr PrepareXCoord
+	jsr __PrepareXCoord
 
 DoRectangleLoop:				; all rectangle functions call horizontal line drawing
 	lda r2L
@@ -129,6 +132,7 @@ DoRectangleLoop:				; all rectangle functions call horizontal line drawing
 
 .segment "graph2i1"
 
+.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
 ;---------------------------------------------------------------
 ; FrameRectangle                                          $C127
 ;
@@ -140,22 +144,22 @@ DoRectangleLoop:				; all rectangle functions call horizontal line drawing
 ; Return:    r2L, r3H unchanged
 ; Destroyed: a, x, y, r5 - r9, r11
 ;---------------------------------------------------------------
-_FrameRectangle:
+__FrameRectangle:
 	sta r9H
 	ldy r2L
 	sty r11L
-	jsr _HorizontalLine
+	jsr __HorizontalLine
 	MoveB r2H, r11L
 	lda r9H
-	jsr _HorizontalLine
+	jsr __HorizontalLine
 	PushW r3
 	PushW r4
 	MoveW r3, r4
 	MoveW r2, r3
 	lda r9H
-	jsr _VerticalLine
+	jsr __VerticalLine
 	PopW r4
 	lda r9H
-	jsr _VerticalLine
+	jsr __VerticalLine
 	PopW r3
 	rts

@@ -6,6 +6,8 @@
 ; Maciej 'YTM/Elysium' Witkowiak, Atari support
 ; Font_2 and Font_4 were altered
 
+.warning "font2.s - modify Font_4 to banked version (r6) might be backbuffer"
+
 .include "const.inc"
 .include "geossym.inc"
 .include "geosmac.inc"

@@ -145,6 +145,12 @@ KERNAL_SOURCES = \
 	kernal/time/time1.s \
 	kernal/tobasic/tobasic2.s \
 	kernal/vars/vars.s \
+	kernal/hw/banking.s \
+	kernal/hw/bank_jmptab_back.s \
+	kernal/hw/bank_jmptab_front.s \
+	kernal/bitmask/bitmask1b0.s \
+	kernal/bitmask/bitmask2b0.s \
+	kernal/bitmask/bitmask3b0.s \
 	kernal/hw/ramloader.s
 endif
 

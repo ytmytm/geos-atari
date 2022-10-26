@@ -11,24 +11,27 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
+.include "atari.inc"
 
-.import BitMaskPow2Rev
-.import BitMaskLeadingSet
-.import BitMaskLeadingClear
-.import _GetScanLine
+.import __BitMaskPow2Rev
+.import __BitMaskLeadingSet
+.import __BitMaskLeadingClear
+.import __GetScanLine
 
-.global ImprintLine
-.global _HorizontalLine
-.global _InvertLine
-.global _RecoverLine
-.global _VerticalLine
+.global __ImprintLine
+.global __HorizontalLine
+.global __InvertLine
+.global __RecoverLine
+.global __VerticalLine
 
-.global PrepareXCoord
+.global __PrepareXCoord
 .global __HorizontalLineDo
 .global __InvertLineDo
 .global __RecoverLineDo
 
 .segment "graph2a"
+
+.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
 
 ; The same thing as GetLeftXAddress on C128 but optimized to 320 pixels instead of 640
 ; in: r3       X coord (0-319)
@@ -44,16 +47,16 @@
 ;     X        bit number
 ; Destroyed: a, x, r3H, r4H
 
-PrepareXCoord:
+__PrepareXCoord:
 	; set r5, r6 to screen address of scanline
 	ldx r11L
 PrepareXCoordX:
-	jsr _GetScanLine
+	jsr __GetScanLine
 	; bitmask right before r4 is changed
 	lda r4L
 	and #%00000111
 	tax
-	lda BitMaskLeadingClear,x
+	lda __BitMaskLeadingClear,x
 	sta r8H
 	; card number since start of the line (inclusive)
 	IncW r4
@@ -67,7 +70,7 @@ PrepareXCoordX:
 	lda r3L
 	and #%0000111
 	tax
-	lda BitMaskLeadingSet,x
+	lda __BitMaskLeadingSet,x
 	sta r8L
 	; card number since start of the line
 	lda r3L
@@ -90,11 +93,11 @@ PrepareXCoordX:
 ; Return:    r11L unchanged
 ; Destroyed: a, x, y, r5 - r8, r11
 ;---------------------------------------------------------------
-_HorizontalLine:
+__HorizontalLine:
 	sta r7L				; temporary for pattern
 	PushW r3
 	PushW r4
-	jsr PrepareXCoord
+	jsr __PrepareXCoord
 	jsr __HorizontalLineDo
 HLinEnd2:
 	PopW r4
@@ -158,10 +161,10 @@ HLinEnd3:
 ; Return:    r3-r4 unchanged
 ; Destroyed: a, x, y, r5 - r8
 ;---------------------------------------------------------------
-_InvertLine:
+__InvertLine:
 	PushW r3
 	PushW r4
-	jsr PrepareXCoord
+	jsr __PrepareXCoord
 	jsr __InvertLineDo
 	jmp HLinEnd2
 
@@ -214,13 +217,13 @@ __InvertLineDo:
 ;            background screen (r6)
 ; Destroyed: a, x, y, r5 - r8
 ;---------------------------------------------------------------
-ImprintLine:
+__ImprintLine:
 	PushW r3			; prefix is the same as RecoverLine...
 	PushW r4
 	PushB dispBufferOn
 	ora #ST_WR_FORE | ST_WR_BACK
 	sta dispBufferOn
-	jsr PrepareXCoord
+	jsr __PrepareXCoord
 	lda r5L				; ... just swap r5 and r6
 	ldy r6L
 	sta r6L
@@ -242,13 +245,13 @@ ImprintLine:
 ; Destroyed: a, x, y, r5 - r8
 ;---------------------------------------------------------------
 
-_RecoverLine:
+__RecoverLine:
 	PushW r3
 	PushW r4
 	PushB dispBufferOn
 	ora #ST_WR_FORE | ST_WR_BACK
 	sta dispBufferOn
-	jsr PrepareXCoord
+	jsr __PrepareXCoord
 RLin0:
 	jsr __RecoverLineDo
 	PopB dispBufferOn
@@ -303,7 +306,7 @@ __RecoverLineDo:
 ; Return:    draw the line
 ; Destroyed: a, x, y, r4 - r8, r11
 ;---------------------------------------------------------------
-_VerticalLine:
+__VerticalLine:
 	tay				; Y = pattern
 	ldx r3L				; X = line start
 	PushW r4
@@ -318,7 +321,7 @@ _VerticalLine:
 	MoveB r3L, r4L			; r4L = top
 	; r8L = pattern, Y = left offset, r5+r6 set, lines r3L to r3H, X = bitnumber
 
-	lda BitMaskPow2Rev,x
+	lda __BitMaskPow2Rev,x
 	sta r7L				; bit of interest
 	eor #$ff
 	sta r7H				; bits to protect
@@ -327,7 +330,7 @@ _VerticalLine:
 @1:	lda r4L
 	and #%00000111
 	tax
-	lda BitMaskPow2Rev,x
+	lda __BitMaskPow2Rev,x
 	and r8L				; next pattern bit set or reset?
 	beq :+
 	lda #$ff

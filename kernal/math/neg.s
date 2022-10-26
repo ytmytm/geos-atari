@@ -8,12 +8,13 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
+.include "atari.inc"
 
-.global _Dabs
-.global _Dnegate
+.global __Dabs
+.global __Dnegate
 
 .segment "math1c1"
+.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
 
 ;---------------------------------------------------------------
 ; Dabs                                                    $C16F
@@ -25,9 +26,9 @@
 ; Return:    x   zpage : contains the absolute value
 ; Destroyed: a
 ;---------------------------------------------------------------
-_Dabs:
+__Dabs:
 	lda zpage+1,x
-	bmi _Dnegate
+	bmi __Dnegate
 	rts
 ;---------------------------------------------------------------
 ; Dnegate                                                 $C172
@@ -38,7 +39,7 @@ _Dabs:
 ; Return:    destination zpage gets negated
 ; Destroyed: a, y
 ;---------------------------------------------------------------
-_Dnegate:
+__Dnegate:
 	lda zpage+1,x
 	eor #$FF
 	sta zpage+1,x
@@ -46,6 +47,6 @@ _Dnegate:
 	eor #$FF
 	sta zpage,x
 	inc zpage,x
-	bne @1
+	bne :+
 	inc zpage+1,x
-@1:	rts
+:	rts

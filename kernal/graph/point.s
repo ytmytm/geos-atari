@@ -8,32 +8,19 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
+.include "atari.inc"
 
-.import BitMaskPow2Rev
-.import _GetScanLine
-.ifdef bsw128
-.import _Dabs
-.import _TempHideMouse
-.import _DShiftLeft
-.import _HorizontalLine
-.else
-.import Dabs
-.endif
+.import __BitMaskPow2Rev
+.import __GetScanLine
+.import __Dabs
 
-.import LF4B7
-.import LF558
-.import StaFrontbuffer80
-.import StaBackbuffer80
-.import LF4A7
-.import GetLeftXAddress
-.import _NormalizeX
-
-.global _TestPoint
-.global _DrawPoint
-.global _DrawLine
+.global __TestPoint
+.global __DrawPoint
+.global __DrawLine
 
 .segment "graph4"
 
+.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
 ;---------------------------------------------------------------
 ; DrawLine                                                $C130
 ;
@@ -48,7 +35,7 @@
 ; Return:    line is drawn or recover
 ; Destroyed: a, x, y, r4 - r8, r11
 ;---------------------------------------------------------------
-_DrawLine:
+__DrawLine:
 	php
 .ifdef bsw128
 	bmi @Y
@@ -83,7 +70,7 @@ _DrawLine:
 .ifdef bsw128
 	jsr _Dabs
 .else
-	jsr Dabs
+	jsr __Dabs
 .endif
 	CmpW r12, r7
 	bcs @2
@@ -133,7 +120,7 @@ _DrawLine:
 	LoadB r13L, 1
 @LF103:	plp
 	php
-	jsr _DrawPoint
+	jsr __DrawPoint
 	jsr CmpWR3R4
 	bcs @LF13E
 	inc r3L
@@ -185,7 +172,7 @@ _DrawLine:
 	LoadW r13, 1
 @LF1AD:	plp
 	php
-	jsr _DrawPoint
+	jsr __DrawPoint
 	CmpB r11L, r11H
 	bcs @LF1EB
 	inc r11L
@@ -237,7 +224,7 @@ _DrawLine:
 	LoadB r13L, 1
 @5:	plp
 	php
-	jsr _DrawPoint
+	jsr __DrawPoint
 	CmpW r3, r4
 	bcs @8
 	inc r3L
@@ -288,7 +275,7 @@ _DrawLine:
 	LoadW r13, 1
 @C:	plp
 	php
-	jsr _DrawPoint
+	jsr __DrawPoint
 	CmpB r11L, r11H
 	bcs @E
 	inc r11L
@@ -309,10 +296,10 @@ _DrawLine:
 ; Return:    point is drawn or recovered
 ; Destroyed: a, x, y, r5 - r6
 ;---------------------------------------------------------------
-_DrawPoint:
+__DrawPoint:
 	php
 	ldx r11L
-	jsr _GetScanLine
+	jsr __GetScanLine
 
 	ldx r3H
 	lda r3L
@@ -326,7 +313,7 @@ _DrawPoint:
 	lda r3L
 	and #%00000111
 	tax
-	lda BitMaskPow2Rev,x
+	lda __BitMaskPow2Rev,x
 	plp
 	bmi @4
 	bcc @2
@@ -356,9 +343,9 @@ _DrawPoint:
 ; Return:    carry set if bit is set
 ; Destroyed: a, x, y, r5, r6
 ;---------------------------------------------------------------
-_TestPoint:
+__TestPoint:
 	ldx r11L
-	jsr _GetScanLine
+	jsr __GetScanLine
 
 	ldx r3H
 	lda r3L
@@ -372,7 +359,7 @@ _TestPoint:
 	lda r3L
 	and #%00000111
 	tax
-	lda BitMaskPow2Rev,x
+	lda __BitMaskPow2Rev,x
 	and (r6),y
 	beq @2
 	sec

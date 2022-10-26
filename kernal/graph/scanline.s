@@ -11,13 +11,12 @@
 .include "kernal.inc"
 .include "atari.inc"
 
-.import atari_banks
-.import interrupt_lock
 .import Panic
 
-.global _GetScanLine
+.global __GetScanLine
 
 .segment "graph2n"
+.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
 ;---------------------------------------------------------------
 ; GetScanLine                                             $C13C
 ;
@@ -28,18 +27,13 @@
 ;            r6  add of 1st byte of background scr
 ; Destroyed: a
 ;---------------------------------------------------------------
-_GetScanLine:
-	PushB PIA_PORTB
-	LoadB interrupt_lock, $ff
-	MoveB atari_banks+0, PIA_PORTB
+__GetScanLine:
 	lda LineTabL, x
 	sta r5L
 	sta r6L
 	lda LineTabH, x
 	sta r5H
 	sta r6H
-	PopB PIA_PORTB
-	LoadB interrupt_lock, 0
 
 	bbrf 7, dispBufferOn, @4	; !ST_WR_FORE
 	bvs @3				; ST_WR_FORE | ST_WR_BACK

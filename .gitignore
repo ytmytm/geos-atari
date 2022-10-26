@@ -4,6 +4,7 @@ desktop.cvt
 build
 emu
 tools/*.bin
+*.CVT
 *.cvt
 *.grcs
 *.grco

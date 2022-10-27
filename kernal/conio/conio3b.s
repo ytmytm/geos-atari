@@ -8,16 +8,9 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "c64.inc"
 
-.global _LoadCharSet
 
 .import BSWFont
-
-.if .defined(trap2) && (!.defined(trap2_alternate_location))
-.import GetSerialNumber2
-.import SerialHiCompare
-.endif
 
 .ifdef bsw128
 .import BSWFont80
@@ -31,21 +24,23 @@ PrvCharWidth = $880D
 .endif
 
 .global GetChWdth1
-.global _UseSystemFont
 .global _GetCharWidth
 
-.segment "conio3b"
+.global __LoadCharSet
+.global __UseSystemFont
 
-_UseSystemFont:
+.segment "conio3b0b"
+
+__UseSystemFont:
 .ifdef bsw128
 	bbsf 7, graphMode, @X
 	LoadW r0, BSWFont
-	bra _LoadCharSet
+	bra __LoadCharSet
 @X:	LoadW r0, BSWFont80
 .else
 	LoadW r0, BSWFont
 .endif
-_LoadCharSet:
+__LoadCharSet:
 	ldy #0
 @1:	lda (r0),y
 	sta baselineOffset,y
@@ -54,16 +49,9 @@ _LoadCharSet:
 	bne @1
 	AddW r0, curIndexTable
 	AddW r0, cardDataPntr
-
-.if .defined(trap2) && (!.defined(trap2_alternate_location))
-	; copy high-byte of serial
-	lda SerialHiCompare
-	bne @2
-	jsr GetSerialNumber2
-	sta SerialHiCompare
-@2:
-.endif
 	rts
+
+.segment "conio3b"
 
 _GetCharWidth:
 	subv $20

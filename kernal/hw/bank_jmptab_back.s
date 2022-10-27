@@ -8,6 +8,11 @@
 .import __HorizontalLine, __InvertLine, __RecoverLine, __VerticalLine, __Rectangle, __FrameRectangle, __InvertRectangle, __RecoverRectangle, __DrawLine, __DrawPoint, __GetScanLine, __TestPoint;, __BitmapUp
 .import __ImprintRectangle ;, __BitmapClip, __BitOtherClip
 .import __Dabs, __Dnegate
+.import __UseSystemFont
+.import __GetCharWidth
+.import __LoadCharSet
+.import __InitTextPrompt
+.import __PromptOn, __PromptOff
 
 .segment "bank_jmptab_back"
 
@@ -26,16 +31,16 @@
 	jmp __GetScanLine	;+
 	jmp __TestPoint		;+
 ;	jmp __BitmapUp
-;	jmp _UseSystemFont
 ;	jmp _GetRealSize
 ;	jmp _GetCharWidth
-;	jmp _LoadCharSet
+	jmp __UseSystemFont
+	jmp __LoadCharSet
 	jmp __ImprintRectangle	;+
 ;	jmp __BitmapClip
 ;	jmp __BitOtherClip
-;	jmp _InitTextPrompt
-;	jmp _PromptOn
-;	jmp _PromptOff
+	jmp __InitTextPrompt
+	jmp __PromptOn
+	jmp __PromptOff
 ;	jmp _BackBankFunc_23
 ;	jmp FontPutChar
 ;	jmp _TempHideMouse

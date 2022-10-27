@@ -15,13 +15,13 @@
 .import _PosSprite
 .import curYSize
 
-.global _PromptOn
-.global _PromptOff
-.global _InitTextPrompt
+.global __PromptOn
+.global __PromptOff
+.global __InitTextPrompt
 
 .segment "conio5"
 
-_PromptOn:
+__PromptOn:
 	lda #%01000000
 	ora alphaFlag
 	sta alphaFlag
@@ -31,7 +31,7 @@ _PromptOn:
 	jsr _PosSprite
 	jsr _EnablSprite
 	bra PrmptOff1
-_PromptOff:
+__PromptOff:
 	lda #%10111111
 	and alphaFlag
 	sta alphaFlag
@@ -45,7 +45,7 @@ PrmptOff1:
 	rts
 
 
-_InitTextPrompt:
+__InitTextPrompt:
 	tay
 
 	; clear the buffer

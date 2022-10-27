@@ -48,141 +48,72 @@ DlgBoxPrep2:
 
 DrawDlgBox:
 	LoadB dispBufferOn, ST_WR_FORE | ST_WRGS_FORE
+	;0th left,right+8,top,bottom+8
+	jsr CalcDialogCoordsWithShadow
+	jsr ImprintRectangle
+
 	ldy #0
 	lda (DBoxDesc),y
 	and #%00011111
-.ifdef speedupDlgBox
-	bne DrwDlgSpd0
-	jmp @1
-DrwDlgSpd0:
+	beq @noshadow
+
+	jsr SetPattern
 	;1st: right,right+8,top+8,bottom
-	;2nd: left+8,right+8,bottom,bottom+8
-	jsr SetPattern
-	PushW DBoxDesc
-	ldy #0
-	lda (DBoxDesc),y
-	bpl DrwDlgSpd1
-	LoadW DBoxDesc, DBDefinedPos-1
-DrwDlgSpd1:
-	ldy #1
-	lda (DBoxDesc),y
-	addv 8
-	sta r2L
-	iny
-	lda (DBoxDesc),y
-	sta r2H
-	iny
-	iny
-	iny
-	lda (DBoxDesc),y
-	sta r3L
-	tax
-	iny
-	lda (DBoxDesc),y
-	sta r3H
-	txa
-	addv 8
-	sta r4L
-	lda r3H
-	adc #0
-	sta r4H
-.ifdef atari
-	; imprint/recover should be done on dlgbox+shadow (8 added to X/Y)
-	; standard BSW code draws two shifted rectangles, imprint on the second one (front) would overwrite backscreen with shadow
-	; for now it's close enough
-	jsr ImprintRectangle	; imprint shadow
-.endif
-	jsr Rectangle
-	MoveB r2H, r2L
-	addv 8
-	sta r2H
-	ldy #1+2
-	lda (DBoxDesc),y
-	sta r3L
-	iny
-	lda (DBoxDesc),y
-	sta r3H
-	AddVW 8, r3
-.ifdef atari
-	jsr ImprintRectangle
-.endif
-	jsr Rectangle
-	PopW DBoxDesc
-.else
-	beq @1
-	jsr SetPattern
-	sec
 	jsr CalcDialogCoords
-.ifdef atari
-	jsr ImprintRectangle
-.endif
+	AddVB 8, r2L
+	MoveW r4, r3
+	AddVW 8, r4
 	jsr Rectangle
-.endif
-@1:	lda #0
+	;2nd: left+8,right+8,bottom,bottom+8
+	jsr CalcDialogCoords
+	AddVW 8, r3
+	AddVW 8, r4
+	MoveB r2H, r2L
+	AddVB 8, r2H
+	jsr Rectangle
+
+@noshadow:
+	lda #0
 	jsr SetPattern
-	clc
 	jsr CalcDialogCoords
 	MoveW r4, rightMargin
-.ifdef atari
-	;jsr ImprintRectangle	; not the front
-.endif
 	jsr Rectangle
 	lda #$ff
 	jsr FrameRectangle
-	lda #0
-	sta defIconTab
+	LoadB defIconTab, 0
 	rts
 
-Dialog_1:
-	ldy #0
-	lda (DBoxDesc),y
-	and #%00011111
-	beq @1
-	sec
-	jsr @2
-@1:	clc
-@2:	jsr CalcDialogCoords
+RecoverDialogBox:
+	jsr CalcDialogCoordsWithShadow
 	jmp RcvrMnu0
 
+CalcDialogCoordsWithShadow:
+	jsr CalcDialogCoords
+	AddVB 8, r2H		; bottom+8
+	AddVW 8, r4		; right+8
+	rts
+
 CalcDialogCoords:
-.ifdef speedupDlgBox
-	LoadB r1H, 0
-.else
-	lda #0
-	bcc @1
-	lda #8
-@1:	sta r1H
-.endif
-	PushW DBoxDesc
 	ldy #0
 	lda (DBoxDesc),y
-	bpl @2
-	LoadW DBoxDesc, DBDefinedPos-1
-@2:	ldx #0
+	bmi @def_db_pos
+	ldx #0
 	ldy #1
-@3:	lda (DBoxDesc),y
-	clc
-	adc r1H
+:	lda (DBoxDesc),y
 	sta r2L,x
-	iny
-	inx
-	cpx #2
-	bne @3
-@4:	lda (DBoxDesc),y
-	clc
-	adc r1H
-	sta r2L,x
-	iny
-	inx
-	lda (DBoxDesc),y
-	bcc @5
-	adc #0
-@5:	sta r2L,x
 	iny
 	inx
 	cpx #6
-	bne @4
-	PopW DBoxDesc
+	bne :-
+	rts
+
+@def_db_pos:
+	ldx #0
+:	lda DBDefinedPos,x
+	sta r2L,x
+	inx
+	cpx #6
+	bne :-
 	rts
 
 DBDefinedPos:
@@ -193,7 +124,7 @@ DBDefinedPos:
 
 _RstrFrmDialogue:
 	jsr Dialog_2
-	jsr Dialog_1
+	jsr RecoverDialogBox
 	MoveB sysDBData, r0L
 	ldx dlgBoxCallerSP
 	txs

@@ -56,3 +56,13 @@ _SetPattern:
 	tay
 	LoadW curPattern, curPatternBuf
 	rts
+
+
+.global _GetScanLineDummy
+_GetScanLineDummy:
+	; 320-bytes long scratch buffer
+	.warning "this could just point to backbuffer"
+	LoadW COLOR_MATRIX, r5
+	MoveW r5, r6
+	rts
+

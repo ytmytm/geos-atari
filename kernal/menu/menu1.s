@@ -47,6 +47,10 @@
 .import _HorizontalLine
 .endif
 
+.ifdef atari
+.import _ImprintRectangle
+.endif
+
 .global DoMenu0
 .global GetMenuDesc
 .global Menu_0
@@ -106,6 +110,9 @@ DoMenu1_1:
 	PushW curPattern
 	lda #0
 	jsr _SetPattern
+.ifdef atari
+	jsr _ImprintRectangle			; cache whatever is under the menu
+.endif
 	jsr _Rectangle
 	PopW curPattern
 .ifdef wheels

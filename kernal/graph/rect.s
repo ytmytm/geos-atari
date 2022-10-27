@@ -42,7 +42,6 @@ ASSERT_IN_BANK0
 __RecoverRectangle:
 	PushB r2L
 	sta r11L
-	sty r2L
 	PushW r3
 	PushW r4
 	PushB dispBufferOn
@@ -50,13 +49,11 @@ __RecoverRectangle:
 	sta dispBufferOn
 	jsr __PrepareXCoord
 	PopB dispBufferOn
-	ldy #%01000000				; bit 6 = OP call recover line
-	bne DoRectangleLoop
+	bra ImprintPrep
 
 __ImprintRectangle:
 	PushB r2L
 	sta r11L
-	sty r2L
 	PushW r3
 	PushW r4
 	PushB dispBufferOn
@@ -72,7 +69,9 @@ __ImprintRectangle:
 	ldy r6H
 	sta r6H
 	sty r5H
+ImprintPrep:
 	ldy #%01000000				; bit 6 = OP call recover line
+	sty r2L
 	bne DoRectangleLoop
 
 __Rectangle:

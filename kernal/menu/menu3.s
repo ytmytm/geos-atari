@@ -95,9 +95,6 @@ RcvrMnu0:
 	lda RecoverVector
 	ora RecoverVector+1
 	bne @1
-.ifndef wheels_size_and_speed
-	lda #0
-.endif
 	jsr SetPattern
 	jmp Rectangle
 @1:	jmp (RecoverVector)

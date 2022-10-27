@@ -24,10 +24,8 @@
 ;bank0SavePS:	.res 1
 bank0SavePORTB = bank0SaveRcr
 
-.segment "banking"
-
-.warning "banking.s - add assert that this can't be in banked space"
-
+	.segment "banking"
+ASSERT_NOT_IN_BANK0
 ; called from $D800+ jumps into $4000 (ATARI_EXPBASE) with the same byte offset
 CallBackBank:
 	; save A and P

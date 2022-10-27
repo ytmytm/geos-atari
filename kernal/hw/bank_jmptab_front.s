@@ -9,8 +9,11 @@
 ; This is adapted for Atari: front bank is in $E000 all the time, back bank is in $4000 switched on/off as needed
 
 .include "config.inc"
+.include "geosmac.inc"
 
 .import CallBackBank
+
+.import njumps
 
 .global _HorizontalLine, _InvertLine, _RecoverLine, _VerticalLine, _Rectangle, _FrameRectangle, _InvertRectangle, _RecoverRectangle, _DrawLine, _DrawPoint, _GetScanLine, _TestPoint;, _BitmapUp
 .global _ImprintRectangle;, _BitmapClip, _BitOtherClip
@@ -23,8 +26,11 @@
 
 .segment "bank_jmptab_front"
 
+ASSERT_NOT_IN_BANK0
+
 	.assert * = $D800, error, "This code must be placed at $D800 in front RAM (start of page actually)."
 
+jumpstart:
 _HorizontalLine:	jsr CallBackBank
 _InvertLine:		jsr CallBackBank
 _RecoverLine:		jsr CallBackBank
@@ -67,4 +73,7 @@ _PromptOff:		jsr CallBackBank
 ;_HideOnlyMouse:		jsr CallBackBank
 _Dabs:			jsr CallBackBank
 _Dnegate:		jsr CallBackBank
+
+	.assert * - jumpstart < $0100, error, "jump table too long"
+	.assert * - jumpstart = njumps, error, "different length of jump table in front/back bank"
 

@@ -8,7 +8,6 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "atari.inc"
 
 .import __BitMaskPow2Rev
 .import __GetScanLine
@@ -18,9 +17,9 @@
 .global __DrawPoint
 .global __DrawLine
 
-.segment "graph4"
+	.segment "graph4"
+ASSERT_IN_BANK0
 
-.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
 ;---------------------------------------------------------------
 ; DrawLine                                                $C130
 ;

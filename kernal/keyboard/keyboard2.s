@@ -16,7 +16,7 @@
 
 .segment "keyboard2"
 
-.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "keyboard maps not in bank0"
+ASSERT_IN_BANK0
 
 ;	.byte "L", "J", ";", $03, $04, "K", "+", "*"
 ;	.byte "O", $09, "P", "U", return_c, "I", "-", "="

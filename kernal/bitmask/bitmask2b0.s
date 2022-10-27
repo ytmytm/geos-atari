@@ -4,13 +4,12 @@
 ; Common bitmasks
 
 .include "config.inc"
-.include "atari.inc"
+.include "geosmac.inc"
 
 .global __BitMaskPow2
 
 .segment "bitmask2b0"
-
-.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
+ASSERT_IN_BANK0
 
 __BitMaskPow2:
 	.byte %00000001

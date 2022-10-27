@@ -27,6 +27,8 @@
 
 .segment "keyboard1"
 
+ASSERT_NOT_IN_BANK0
+
 ; we enter here from IRQ with tmpPOKEY_IRQST value in A to check for BREAK (bit7=0) but we don't care
 
 _DoKeyboardScan:

@@ -4,8 +4,6 @@
 .include "const.inc"
 .include "geossym.inc"
 .include "geosmac.inc"
-;.include "config.inc"
-;.include "kernal.inc"
 .include "atari.inc"
 
 .import DetectRamExp
@@ -57,6 +55,8 @@
 .endif
 
 .segment "ramloader"
+
+ASSERT_NOT_IN_BANK0
 
 RamLoaderInit:
 	; remember

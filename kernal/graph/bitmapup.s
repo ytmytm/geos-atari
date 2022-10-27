@@ -19,9 +19,8 @@
 .global BitmapDecode
 .global _BitmapUp
 
-.segment "graph3c"
-
-.warning "bitmapup.s - add assert that this can't be in banked space"
+	.segment "graph3c"
+ASSERT_NOT_IN_BANK0
 
 ;---------------------------------------------------------------
 ; BitmapUp                                                $C142

@@ -8,7 +8,6 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "atari.inc"
 
 .import __HorizontalLine
 .import __InvertLine
@@ -27,9 +26,8 @@
 .global __ImprintRectangle
 .global __FrameRectangle
 
-.segment "graph2c"
-
-.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
+	.segment "graph2c"
+ASSERT_IN_BANK0
 
 ;---------------------------------------------------------------
 ; Rectangle                                               $C124
@@ -131,8 +129,8 @@ DoRectangleLoop:				; all rectangle functions call horizontal line drawing
 	rts
 
 .segment "graph2i1"
+ASSERT_IN_BANK0
 
-.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
 ;---------------------------------------------------------------
 ; FrameRectangle                                          $C127
 ;

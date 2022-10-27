@@ -4,6 +4,7 @@
 ; Jump table to dispatch back bank functions
 
 .include "config.inc"
+.include "geosmac.inc"
 
 .import __HorizontalLine, __InvertLine, __RecoverLine, __VerticalLine, __Rectangle, __FrameRectangle, __InvertRectangle, __RecoverRectangle, __DrawLine, __DrawPoint, __GetScanLine, __TestPoint;, __BitmapUp
 .import __ImprintRectangle ;, __BitmapClip, __BitOtherClip
@@ -14,10 +15,13 @@
 .import __InitTextPrompt
 .import __PromptOn, __PromptOff
 
+.global njumps
+
 .segment "bank_jmptab_back"
+ASSERT_IN_BANK0
 
 	.assert * = $4000, error, "This code must be placed at $4000 in back RAM."
-
+jumpstart:
 	jmp __HorizontalLine	;+
 	jmp __InvertLine	;+
 	jmp __RecoverLine	;+
@@ -60,4 +64,8 @@
 ;	jmp _HideOnlyMouse
 	jmp __Dabs	;+
 	jmp __Dnegate	;+
+
+njumps = * - jumpstart
+
+	.assert *-jumpstart < $100, error, "jump table too long"
 

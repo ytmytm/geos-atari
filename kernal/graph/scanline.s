@@ -9,14 +9,13 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "atari.inc"
 
 .import Panic
 
 .global __GetScanLine
 
-.segment "graph2n"
-.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
+	.segment "graph2n"
+ASSERT_IN_BANK0
 ;---------------------------------------------------------------
 ; GetScanLine                                             $C13C
 ;
@@ -55,8 +54,7 @@ __GetScanLine:
 	jmp Panic			; impossible combination, panic
 
 	.segment "scanline"
-
-.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "scanline tables not in bank0"
+ASSERT_IN_BANK0
 
 LineTabL:
 	.repeat 200, line

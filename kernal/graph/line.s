@@ -11,7 +11,6 @@
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
-.include "atari.inc"
 
 .import __BitMaskPow2Rev
 .import __BitMaskLeadingSet
@@ -29,9 +28,8 @@
 .global __InvertLineDo
 .global __RecoverLineDo
 
-.segment "graph2a"
-
-.assert * >= ATARI_EXPBASE && * < ATARI_EXPBASE+ATARI_EXP_WINDOW, error, "This code must be in bank0"
+	.segment "graph2a"
+ASSERT_IN_BANK0
 
 ; The same thing as GetLeftXAddress on C128 but optimized to 320 pixels instead of 640
 ; in: r3       X coord (0-319)

@@ -17,11 +17,12 @@
 .global _SetPattern
 
 .segment "ramexp2"
-
+ASSERT_NOT_IN_BANK0
 curPatternBuf:	.res 8, 0
 
 .segment "graph2l2"
 
+ASSERT_NOT_IN_BANK0
 ;---------------------------------------------------------------
 ; SetPattern                                              $C139
 ;

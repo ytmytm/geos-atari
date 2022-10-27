@@ -219,3 +219,6 @@ make SYSTEM=atari320
 ```
 
 The result is in `build/<atari system>/GEOS<atari system>.XEX` file, ready to be used with an emulator.
+
+I am abusing GCC preprocessor to add conditionals to ld65 configuration files and expand environment variables inside one of the ca65 sources.
+Perhaps this should be rewritten to use proper macro expansion language, like `m4`.

@@ -43,6 +43,11 @@
 .global _RecoverMenu
 .global _RecoverAllMenus
 
+.ifdef atari
+.warning "public getscanline must return pointer to a 320-byte scratch buffer, all Kernal functions must call _GetScanLine(real) instead"
+.import _RecoverRectangle
+.endif
+
 .segment "menu3"
 
 Menu_3:
@@ -84,6 +89,9 @@ _RecoverAllMenus:
 _RecoverMenu:
 	jsr CopyMenuCoords
 RcvrMnu0:
+.ifdef atari
+	jsr _RecoverRectangle	; always recover from screen backbuffer, call application-level recover in case something needs to be updated
+.endif
 	lda RecoverVector
 	ora RecoverVector+1
 	bne @1

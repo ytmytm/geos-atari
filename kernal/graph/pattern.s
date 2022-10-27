@@ -59,10 +59,13 @@ _SetPattern:
 
 
 .global _GetScanLineDummy
+.import _GetScanLine
 _GetScanLineDummy:
 	; 320-bytes long scratch buffer
 	.warning "this could just point to backbuffer"
-	LoadW COLOR_MATRIX, r5
-	MoveW r5, r6
+	PushB dispBufferOn
+	LoadB dispBufferOn, ST_WR_BACK
+	jsr _GetScanLine
+	PopB dispBufferOn
 	rts
 

@@ -57,15 +57,3 @@ _SetPattern:
 	LoadW curPattern, curPatternBuf
 	rts
 
-
-.global _GetScanLineDummy
-.import _GetScanLine
-_GetScanLineDummy:
-	; 320-bytes long scratch buffer
-	.warning "this could just point to backbuffer"
-	PushB dispBufferOn
-	LoadB dispBufferOn, ST_WR_BACK
-	jsr _GetScanLine
-	PopB dispBufferOn
-	rts
-

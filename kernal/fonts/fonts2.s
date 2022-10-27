@@ -6,13 +6,12 @@
 ; Maciej 'YTM/Elysium' Witkowiak, Atari support
 ; Font_2 and Font_4 were altered
 
-.warning "font2.s - modify Font_4 to banked version (r6) might be backbuffer"
-
 .include "const.inc"
 .include "geossym.inc"
 .include "geosmac.inc"
 .include "config.inc"
 .include "kernal.inc"
+.include "atari.inc"
 
 .import BitMaskPow2
 .import FontSH5
@@ -40,11 +39,15 @@
 .import PrvCharWidth
 .import GetRealSize
 
+.import atari_banks
+.import interrupt_lock
+
 .global Font_9
 .global FontPutChar
 .global _GetRealSize
 
 .segment "fonts2"
+ASSERT_NOT_IN_BANK0
 
 ;---------------------------------------------------------------
 ; GetRealSize                                             $C1B1
@@ -704,6 +707,7 @@ FontPutChar:
 	tya
 	jsr Font_1 ; put pointer in r13
 	bcs @9 ; return
+	LoadB interrupt_lock, $ff
 @1:	clc
 	lda currentMode
 	and #SET_UNDERLINE | SET_ITALIC
@@ -724,7 +728,10 @@ FontPutChar:
 	cmp windowBottom
 	bcc @6
 	bne @7
-@6:	jsr Font_4
+@6:	PushB PIA_PORTB
+	MoveB atari_banks+0, PIA_PORTB
+	jsr Font_4
+	PopB PIA_PORTB
 @7:	lda r5L
 	addv SC_BYTE_WIDTH	; next line
 	sta r5L
@@ -735,6 +742,7 @@ FontPutChar:
 @8:	inc r1H
 	dec r10H
 	bne @1
+	LoadB interrupt_lock, 0
 @9:	PopB r1H
 	rts
 

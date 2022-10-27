@@ -20,6 +20,9 @@
 .import FrameRectangle
 .import Rectangle
 .import SetPattern
+.ifdef atari
+.import ImprintRectangle
+.endif
 
 .global CalcDialogCoords
 .global DlgBoxPrep
@@ -83,6 +86,12 @@ DrwDlgSpd1:
 	lda r3H
 	adc #0
 	sta r4H
+.ifdef atari
+	; imprint/recover should be done on dlgbox+shadow (8 added to X/Y)
+	; standard BSW code draws two shifted rectangles, imprint on the second one (front) would overwrite backscreen with shadow
+	; for now it's close enough
+	jsr ImprintRectangle	; imprint shadow
+.endif
 	jsr Rectangle
 	MoveB r2H, r2L
 	addv 8
@@ -94,6 +103,9 @@ DrwDlgSpd1:
 	lda (DBoxDesc),y
 	sta r3H
 	AddVW 8, r3
+.ifdef atari
+	jsr ImprintRectangle
+.endif
 	jsr Rectangle
 	PopW DBoxDesc
 .else
@@ -101,6 +113,9 @@ DrwDlgSpd1:
 	jsr SetPattern
 	sec
 	jsr CalcDialogCoords
+.ifdef atari
+	jsr ImprintRectangle
+.endif
 	jsr Rectangle
 .endif
 @1:	lda #0
@@ -108,6 +123,9 @@ DrwDlgSpd1:
 	clc
 	jsr CalcDialogCoords
 	MoveW r4, rightMargin
+.ifdef atari
+	;jsr ImprintRectangle	; not the front
+.endif
 	jsr Rectangle
 	lda #$ff
 	jsr FrameRectangle

@@ -9,9 +9,6 @@
 .import __HorizontalLine, __InvertLine, __RecoverLine, __VerticalLine, __Rectangle, __FrameRectangle, __InvertRectangle, __RecoverRectangle, __DrawLine, __DrawPoint, __GetScanLine, __TestPoint;, __BitmapUp
 .import __ImprintRectangle ;, __BitmapClip, __BitOtherClip
 .import __Dabs, __Dnegate
-.import __UseSystemFont
-.import __GetCharWidth
-.import __LoadCharSet
 .import __InitTextPrompt
 .import __PromptOn, __PromptOff
 
@@ -37,8 +34,8 @@ jumpstart:
 ;	jmp __BitmapUp
 ;	jmp _GetRealSize
 ;	jmp _GetCharWidth
-	jmp __UseSystemFont
-	jmp __LoadCharSet
+;	jmp __UseSystemFont
+;	jmp __LoadCharSet
 	jmp __ImprintRectangle	;+
 ;	jmp __BitmapClip
 ;	jmp __BitOtherClip

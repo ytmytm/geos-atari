@@ -18,9 +18,6 @@
 .global _HorizontalLine, _InvertLine, _RecoverLine, _VerticalLine, _Rectangle, _FrameRectangle, _InvertRectangle, _RecoverRectangle, _DrawLine, _DrawPoint, _GetScanLine, _TestPoint;, _BitmapUp
 .global _ImprintRectangle;, _BitmapClip, _BitOtherClip
 .global _Dabs, _Dnegate
-.global _UseSystemFont
-.global _GetCharWidth
-.global _LoadCharSet
 .global _InitTextPrompt
 .global _PromptOn, _PromptOff
 
@@ -46,8 +43,8 @@ _TestPoint:		jsr CallBackBank
 ;_BitmapUp:		jsr CallBackBank
 ;_GetRealSize:		jsr CallBackBank
 ;_GetCharWidth:		jsr CallBackBank
-_UseSystemFont:		jsr CallBackBank
-_LoadCharSet:		jsr CallBackBank
+;_UseSystemFont:		jsr CallBackBank
+;_LoadCharSet:		jsr CallBackBank
 _ImprintRectangle:	jsr CallBackBank
 ;_BitmapClip:		jsr CallBackBank
 ;_BitOtherClip:		jsr CallBackBank

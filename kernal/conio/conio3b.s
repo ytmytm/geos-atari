@@ -26,12 +26,12 @@ PrvCharWidth = $880D
 .global GetChWdth1
 .global _GetCharWidth
 
-.global __LoadCharSet
-.global __UseSystemFont
+.global _LoadCharSet
+.global _UseSystemFont
 
-.segment "conio3b0b"
+.segment "conio3b"
 
-__UseSystemFont:
+_UseSystemFont:
 .ifdef bsw128
 	bbsf 7, graphMode, @X
 	LoadW r0, BSWFont
@@ -40,7 +40,7 @@ __UseSystemFont:
 .else
 	LoadW r0, BSWFont
 .endif
-__LoadCharSet:
+_LoadCharSet:
 	ldy #0
 @1:	lda (r0),y
 	sta baselineOffset,y

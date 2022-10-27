@@ -89,20 +89,52 @@ Player 0 is reserved for mouse pointer. Player 1 is reserved for text prompt, it
 Players 2 and 3 can be used by applications. The *DrawSprite* function takes VIC sprite format as input.
 It will take every third byte to show the leftmost 8-pixels only. The sprite will appear stretched in X direction because VIC sprites have hires pixel size.
 
+You can see how it works in DeskTop if you select a file and then try to drag it.
+
 Missiles are not used.
 
 ### Memory
 
 There are severe memory constraints. GEOS on C64 uses all available memory (64K), under I/O space and otherwise.
 
-Atari has less RAM available because it can't switch off I/O and allocates whole 1K of RAM for sprites (Players).
+Atari has less RAM available because it can't switch off I/O and allocates whole 1K of RAM for sprites (Players). I put sprites in the same space as C64's color matrix. This saves memory, but mouse pointer occasionally will get corrupted or disappear. 
 
-Because of that part of space reserved for disk driver is now occupied by Kernal code (about 5 pages) and
-a little bit of Kernal code resides in banked memory in bank 0.
+Page 0 is used for Kernal and application virtual registers, but addresses used by C64/128 Kernal are not touched (about $80-$FF).
 
-If a real disk driver comes (hint, hint) then some better separation and Kernal code banking (like on C128 in bank0 and under I/O space)
-is needed. Probably graphics functions are best fit for that. Since $6000-$7FFF is used as a screen back buffer this means only $4000-$5FFF would be
-usable for code, with space maybe for only one additional disk driver.
+Pages 2 and 3 are not touched by loader, boot code nor GEOS Kernal itself
+
+Pages $04-$5F are free to be used by applications.
+
+Pages $60-$7F are screen backbuffer, but I moved them to bank 0 of expanded RAM, so any native Atari GEOS application (or pathed DeskTop) can use it.
+
+Pages $80-$8B are system variables.
+
+Pages $8C-$8F on C64/128 are color matrix, on Atari this is reserved for Player0-3 graphics.
+
+Pages $90-$9D are reserved for disk driver, this would be swapped with expanded RAM by *SetDevice* function
+
+Pages $9E-$9F have GEOS Kernal code and variables
+
+Pages $A0-$BF contain front buffer for 320x200 hires screen. It is shifted by 56 bytes to match exactly the 4K boundary on 101st line and keep linear addressing.
+
+Pages $C0-$CF contain GEOS Kernal code
+
+Pages $D0-$D7 are I/O
+
+Pages $D8-$FE contain GEOS Kernal code
+
+Pages $FE-$FF contain input driver
+
+Extra memory banks:
+
+bank0 $4000-$5FFF contains GEOS Kernal code (using jump table from $D800)
+bank0 $6000-$7FFF contains screen back buffer, drawing routines with imprint/recover screen from this area, not from system RAM
+
+bank1 $4000-$4100 contains disk header and block allocation map (BAM)
+bank1 $4200-$???? chained directory entries
+all the remaining area is free to be used by files
+
+Unlike C128 there is no special handling for desk accessories - they will have swap file created on RAM disk, which will be only a little slower than copying memory to reserved space.
 
 ### Input devices
 
@@ -134,8 +166,7 @@ Other console keys (START, OPTION) are not scanned and not used.
 
 There is only one disk device: RAM drive.
 
-The *SetDevice* function is unimplemented and it can't swap disk drivers, altough there would be enough space for it in expanded RAM.
-Besides, part of GEOS Kernal code resides in disk driver space ($9000-$9D80) and would have to become banked code first.
+The *SetDevice* function is unimplemented but there would be enough space for a second disk driver in expanded RAM.
 
 The supposed disk driver for SIO devices may use hardware directly or via ROM code. There are functions *InitForIO* and *DoneForIO* that in GEOS64/128 prepare
 the system for using ROM routines for I/O. GEOS doesn't touch memory in $0200-$03ff. Some of zero-page registers are used by the system, but they can be easily preserved.
@@ -154,6 +185,7 @@ Current RAM drive implementation:
 - uses expanded memory that starts in bank 1, bank 0 is reserved for GEOS Kernal
 - uses tracks with 128 sectors each
 - DeskTop ignores track&sector information for disk directory so track 18 (directory) is mapped to track 1
+- Limited to 256K (Atari 320K), can be quite easily updated to 1024K if reusing 1581 drive code
 
 ### Printer drivers
 
@@ -163,9 +195,9 @@ There are none, they will have to be ported. See Disk Drive section for notes ab
 
 There is no CIA time-of-day (TOD) clock, timekeeping is done by counting vertical blank interrupts. During banked operations a short interrupt routine is called and some of these events may be lost.
 
-Clock in DeskTop doesn't work, my guess is that DeskTop tries to read CIA registers directly.
+Clock in DeskTop doesn't work, my guess is that DeskTop tries to read CIA I/O registers directly.
 
-There is no support for alarm clock. It's tied to CIA TOD clock hardware feature.
+There is no support for an alarm clock. It's tied to CIA TOD clock hardware feature.
 The system doesn't provide any function to set the alarm (it's done in hardware by a Desk Accessory) you can only choose if/how it should react to the alarm.
 There is no POKEY replacement code for playing sound chimes.
 

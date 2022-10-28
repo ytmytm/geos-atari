@@ -164,7 +164,7 @@ SEGMENTS {
 	graph2j:            load = KERNALRELOCH, run = KERNALH, type = ro;
 	graph2k:            load = KERNALRELOCH, run = KERNALH, type = ro;
 	graph2l1:           load = KERNALRELOCH, run = KERNALH, type = ro;
-	graph2l2:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2l2:           load = BANK0, run = BANK0, type = ro;
 	graph2m:            load = KERNALRELOCH, run = KERNALH, type = ro;
 	graph2n:            load = BANK0, run = BANK0, type = ro;
 	scanline:           load = BANK0, run = BANK0, type = ro;

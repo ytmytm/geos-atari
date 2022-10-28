@@ -20,6 +20,7 @@
 .global _Dabs, _Dnegate
 .global _InitTextPrompt
 .global _PromptOn, _PromptOff
+.global _SetPattern
 
 .segment "bank_jmptab_front"
 
@@ -70,6 +71,7 @@ _PromptOff:		jsr CallBackBank
 ;_HideOnlyMouse:		jsr CallBackBank
 _Dabs:			jsr CallBackBank
 _Dnegate:		jsr CallBackBank
+_SetPattern:		jsr CallBackBank
 
 	.assert * - jumpstart < $0100, error, "jump table too long"
 	.assert * - jumpstart = njumps, error, "different length of jump table in front/back bank"

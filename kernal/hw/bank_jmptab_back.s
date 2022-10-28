@@ -11,6 +11,7 @@
 .import __Dabs, __Dnegate
 .import __InitTextPrompt
 .import __PromptOn, __PromptOff
+.import __SetPattern
 
 .global njumps
 
@@ -61,6 +62,7 @@ jumpstart:
 ;	jmp _HideOnlyMouse
 	jmp __Dabs	;+
 	jmp __Dnegate	;+
+	jmp __SetPattern
 
 njumps = * - jumpstart
 

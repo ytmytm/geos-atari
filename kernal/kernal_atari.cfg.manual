@@ -1,0 +1,249 @@
+MEMORY {
+	RAMLOADER:    start = $1800, size = $0800, file = %O; # RAMDISK loader (init+copy image)
+	BANK0:        start = $4000, size = $2000, file = %O; # banked Kernal code (bank 0), must be below $6000 because of backbuffer
+	RAM0:         start = $4000, size = $4000, file = %O; # RAM disk chunk 0 (bank 1)
+	RAM1:         start = $4000, size = $4000, file = %O; # RAM disk chunk 1 (bank 2)
+	RAM2:         start = $4000, size = $4000, file = %O; # RAM disk chunk 2 (bank 3)
+.if (__ATARI_BANKS == 16)
+	RAM3:         start = $4000, size = $4000, file = %O; # RAM disk chunk 3 (bank 4)
+	RAM4:         start = $4000, size = $4000, file = %O; # RAM disk chunk 4 (bank 5)
+	RAM5:         start = $4000, size = $4000, file = %O; # RAM disk chunk 5 (bank 6)
+	RAM6:         start = $4000, size = $4000, file = %O; # RAM disk chunk 6 (bank 7)
+	RAM7:         start = $4000, size = $4000, file = %O; # RAM disk chunk 7 (bank 8)
+	RAM8:         start = $4000, size = $4000, file = %O; # RAM disk chunk 8 (bank 9)
+	RAM9:         start = $4000, size = $4000, file = %O; # RAM disk chunk 9 (bank 10)
+	RAMA:         start = $4000, size = $4000, file = %O; # RAM disk chunk A (bank 11)
+	RAMB:         start = $4000, size = $4000, file = %O; # RAM disk chunk B (bank 12)
+	RAMC:         start = $4000, size = $4000, file = %O; # RAM disk chunk C (bank 13)
+	RAMD:         start = $4000, size = $4000, file = %O; # RAM disk chunk D (bank 14)
+	RAME:         start = $4000, size = $4000, file = %O; # RAM disk chunk E (bank 15)
+.endif
+	# RAM segments for banks 3-15 (320K) would come here
+	START:        start = $2000, size = $1000, file = %O; # GEOS boot code, must follow RAM2 to call RamLoaderLastChunk and restore PIA_PORTB through initad
+	DRIVE:        start = $9000, size = $0D80, file = %O; # disk driver (RAM drive only)
+	LOKERNAL:     start = $9D80, size = $0280, file = %O;
+	#COLOR_MATRIX: start = $8C00, size = $03E8;           # overlaps with players (sprites)
+	SPRITES_BUF:  start = $8FE8, size = $0018;            # overlaps with player4 (possibly a problem)
+	ICONS:        start = $BF78, size = $0088, file = %O; # on C64: $BF40 with $C0 size moved here because of ANTIC 4K limit
+	KERNALHDRREL: start = $3000, size = $0100, file = %O, define = yes; # move to KERNALHDR
+	KERNALRELOCL: start = $3100, size = $0F00, file = %O, define = yes; # move to KERNALL
+	KERNALRELOCH: start = $4000, size = $2700, file = %O, define = yes; # move to KERNALH
+	INPUTDRVRELOC:start = $6700, size = $017A, file = %O, define = yes; # move to INPUTDRV
+
+	KERNALHDR:    start = $C000, size = $0100, define = yes; # C000
+	KERNALL:      start = $C100, size = $0F00, define = yes; # C100 = jumptab
+	PLAYERS:      start = $8C00, size = $0400, define = yes; # sprite data
+	KERNALH:      start = $D800, size = $2680, define = yes; # D800
+	INPUTDRV:     start = $FE80, size = $017A, define = yes; # input driver
+	VARS:         start = $86C0, size = $0940;
+}
+
+FILES {
+	%O: format = atari;
+}
+
+FORMATS {
+	atari:	 runad = _ResetHandle
+		,initad = RAMLOADER: RamLoaderInit
+		,initad = BANK0: RamLoaderNextChunk
+		,initad = RAM0: RamLoaderNextChunk
+		,initad = RAM1: RamLoaderNextChunk
+		,initad = RAM2: RamLoaderNextChunk
+.if (__ATARI_BANKS == 16)
+		,initad = RAM3: RamLoaderNextChunk
+		,initad = RAM4: RamLoaderNextChunk
+		,initad = RAM5: RamLoaderNextChunk
+		,initad = RAM6: RamLoaderNextChunk
+		,initad = RAM7: RamLoaderNextChunk
+		,initad = RAM8: RamLoaderNextChunk
+		,initad = RAM9: RamLoaderNextChunk
+		,initad = RAMA: RamLoaderNextChunk
+		,initad = RAMB: RamLoaderNextChunk
+		,initad = RAMC: RamLoaderNextChunk
+		,initad = RAMD: RamLoaderNextChunk
+		,initad = RAME: RamLoaderNextChunk
+.endif
+		,initad = START: RamLoaderLastChunk
+	;
+}
+
+SEGMENTS {
+	vars:               load = VARS, type = bss;
+
+	# Atari RAM loader
+	ramloader:          load = RAMLOADER, type = ro;
+	rambank0:	    load = RAM0, type = ro;
+	rambank1:	    load = RAM1, type = ro;
+	rambank2:	    load = RAM2, type = ro;
+.if (__ATARI_BANKS == 16)
+	rambank3:	    load = RAM3, type = ro;
+	rambank4:	    load = RAM4, type = ro;
+	rambank5:	    load = RAM5, type = ro;
+	rambank6:	    load = RAM6, type = ro;
+	rambank7:	    load = RAM7, type = ro;
+	rambank8:	    load = RAM8, type = ro;
+	rambank9:	    load = RAM9, type = ro;
+	rambanka:	    load = RAMA, type = ro;
+	rambankb:	    load = RAMB, type = ro;
+	rambankc:	    load = RAMC, type = ro;
+	rambankd:	    load = RAMD, type = ro;
+	rambanke:	    load = RAME, type = ro;
+.endif
+
+	bank_jmptab_front:  load = KERNALRELOCH, run = KERNALH, type = ro;
+	banking:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	bank_jmptab_back:   load = BANK0, run = BANK0, type = ro;
+	bitmask1b0:         load = BANK0, run = BANK0, type = ro;
+	bitmask2b0:         load = BANK0, run = BANK0, type = ro;
+	bitmask3b0:         load = BANK0, run = BANK0, type = ro;
+
+	# GEOS booter start: (should be over $5000 because of Auto-Execs)
+	start:              load = START, type = ro;
+	displaylistinit:    load = START, type = ro;
+
+	# Atari sprite data (shadow registers above color matrix)
+	spritebuf:          load = SPRITES_BUF, type = bss;
+	# Atari sprite image data (buffer)
+	players:            load = PLAYERS, type = bss;
+
+	# ramdisk driver $9000-$9D80
+	drive:              load = DRIVE, type = ro;
+
+	# lokernal: $9D80-$9FFF
+	files1a2a:          load = LOKERNAL, type = ro;
+	files1a2b:          load = KERNALRELOCH, run = KERNALH, type = ro;
+	files1b:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	serial1:            load = LOKERNAL, type = ro;
+	ramexp2:            load = ICONS, type = ro;
+	displaylist:        load = LOKERNAL, type = ro;
+
+	# icons: $BF40-$BFFF
+	mouseptr:           load = ICONS, type = ro;
+
+	# kernal header: $c000
+	header:             load = KERNALHDRREL, run = KERNALHDR, type = ro, offset = $0000;
+
+	# ...
+	tobasic2:           load = KERNALHDRREL, run = KERNALHDR, type = ro;
+	mainloop1:          load = KERNALHDRREL, run = KERNALHDR, type = ro;
+	files2:             load = LOKERNAL, run = LOKERNAL, type = ro;
+	dlgbox2:            load = KERNALHDRREL, run = KERNALHDR, type = ro;
+
+	# kernal jump table: $c100
+	jumptab:            load = KERNALRELOCL, run = KERNALL, type = ro;
+
+	# kernal code
+	mainloop3:          load = KERNALRELOCH, run = KERNALH, type = ro;
+	bitmask1:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	bitmask2:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	bitmask3:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	files3:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	load1a:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	load1b:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	load1c:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	load1d:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	init1:              load = LOKERNAL, run = LOKERNAL, type = ro;
+	hw1b:               load = LOKERNAL, run = LOKERNAL, type = ro;
+	graph1:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	init2:              load = LOKERNAL, run = LOKERNAL, type = ro;
+	memory1a:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	memory1b:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	misc:               load = KERNALRELOCH, run = KERNALH, type = ro;
+	load2:              load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2a:            load = BANK0, run = BANK0, type = ro;
+	graph2b:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2c:            load = BANK0, run = BANK0, type = ro;
+	graph2d:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2f:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2h:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2i1:           load = BANK0, run = BANK0, type = ro;
+	inline:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2j:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2k:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2l1:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2l2:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2m:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph2n:            load = BANK0, run = BANK0, type = ro;
+	scanline:           load = BANK0, run = BANK0, type = ro;
+	process1:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	process2:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	process3a:          load = KERNALRELOCH, run = KERNALH, type = ro;
+	process3aa:         load = KERNALRELOCH, run = KERNALH, type = ro;
+	process3b:          load = KERNALRELOCH, run = KERNALH, type = ro;
+	process3c:          load = KERNALRELOCH, run = KERNALH, type = ro;
+	sprites:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	math1a1:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	math1a2:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	math1b:             load = KERNALRELOCL, run = KERNALL, type = ro;
+	math1c1:            load = BANK0, run = BANK0, type = ro;
+	math1c2:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	math1d:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	memory2:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	mouse1:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	panic1:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	panic2:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	panic3:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	serial2:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	patterns:           load = BANK0, run = BANK0, type = ro;
+	fonts1:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	bswfont:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	memory3:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	load3:              load = KERNALRELOCH, run = KERNALH, type = ro;
+	files6a:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	files6b:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	files6c:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	deskacc1:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	load4b:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	deskacc2:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	files7:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	deskacc3:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	files8:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	files9:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	files10:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	init4:              load = KERNALRELOCH, run = KERNALH, type = ro;
+	fonts2:             load = KERNALRELOCL, run = KERNALL, type = ro;
+	fonts3:             load = KERNALRELOCL, run = KERNALL, type = ro;
+	fonts4:             load = KERNALRELOCL, run = KERNALL, type = ro;
+	fonts4a:            load = KERNALRELOCL, run = KERNALL, type = ro;
+	fonts4b:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	graph3a:            load = KERNALRELOCL, run = KERNALL, type = ro;
+	graph3b:            load = KERNALRELOCL, run = KERNALL, type = ro;
+	graph3c:            load = KERNALRELOCL, run = KERNALL, type = ro;
+	conio1:             load = KERNALRELOCL, run = KERNALL, type = ro;
+	conio2:             load = KERNALRELOCL, run = KERNALL, type = ro;
+	conio3a:            load = KERNALRELOCL, run = KERNALL, type = ro;
+	conio3b:            load = KERNALRELOCL, run = KERNALL, type = ro;
+	conio4:             load = KERNALRELOCL, run = KERNALL, type = ro;
+	conio5:             load = BANK0, run = BANK0, type = ro;
+	conio6:             load = KERNALRELOCL, run = KERNALL, type = ro;
+	math2:              load = KERNALRELOCL, run = KERNALL, type = ro;
+	graph4:             load = BANK0, run = BANK0, type = ro;
+	mouse2:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	menu1:              load = KERNALRELOCH, run = KERNALH, type = ro;
+	menu2:              load = KERNALRELOCH, run = KERNALH, type = ro;
+	menu3:              load = KERNALRELOCH, run = KERNALH, type = ro;
+	icon1:              load = KERNALRELOCH, run = KERNALH, type = ro;
+	mouse3:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	icon2:              load = KERNALRELOCH, run = KERNALH, type = ro;
+	dlgbox1a:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	dlgbox1b:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	dlgbox1c:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	dlgbox1d:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	dlgbox1e1:          load = KERNALRELOCH, run = KERNALH, type = ro;
+	dlgbox1e2:          load = KERNALRELOCH, run = KERNALH, type = ro;
+	dlgbox1f:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	dlgbox1g:           load = KERNALRELOCH, run = KERNALH, type = ro;
+	dlgbox1h:           load = DRIVE, run = DRIVE, type = ro;
+	dlgbox1i:           load = ICONS, run = ICONS, type = ro;
+	dlgbox1j:           load = DRIVE, run = DRIVE, type = ro;
+	dlgbox1k:           load = DRIVE, run = DRIVE, type = ro;
+	mouse4:             load = KERNALRELOCH, run = KERNALH, type = ro;
+	irq:                load = KERNALRELOCH, run = KERNALH, type = ro;
+	keyboard1:          load = LOKERNAL, type = ro;
+	keyboard2:          load = BANK0, run = BANK0, type = ro;
+	keyboard3:          load = LOKERNAL, type = ro;
+	time1:              load = KERNALRELOCH, run = KERNALH, type = ro;
+
+	# input driver
+	inputdrv:           load = INPUTDRVRELOC, run = INPUTDRV, type = ro;
+}

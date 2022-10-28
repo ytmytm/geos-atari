@@ -27,13 +27,16 @@ MEMORY {
 	ICONS:        start = $BF78, size = $0088, file = %O; # on C64: $BF40 with $C0 size moved here because of ANTIC 4K limit
 	KERNALHDRREL: start = $3000, size = $0100, file = %O, define = yes; # move to KERNALHDR
 	KERNALRELOCL: start = $3100, size = $0F00, file = %O, define = yes; # move to KERNALL
-	KERNALRELOCH: start = $4000, size = $2700, file = %O, define = yes; # move to KERNALH
+	KERNALRELOHL: start = $4000, size = $0400, file = %O, define = yes; # move to KERNALHL
+	KERNALRELOCH: start = $4400, size = $2270, file = %O, define = yes; # move to KERNALH
 	INPUTDRVRELOC:start = $6700, size = $017A, file = %O, define = yes; # move to INPUTDRV
 
 	KERNALHDR:    start = $C000, size = $0100, define = yes; # C000
 	KERNALL:      start = $C100, size = $0F00, define = yes; # C100 = jumptab
 	PLAYERS:      start = $8C00, size = $0400, define = yes; # sprite data
-	KERNALH:      start = $D800, size = $2680, define = yes; # D800
+	KERNALHL:     start = $D800, size = $0400, define = yes; # D800-DBFF
+	CIA1:         start = $DC00, size = $0010;               # overwritten as clock/ports
+	KERNALH:      start = $DC10, size = $2270, define = yes; # DC10
 	INPUTDRV:     start = $FE80, size = $017A, define = yes; # input driver
 	VARS:         start = $86C0, size = $0940;
 }
@@ -119,7 +122,7 @@ SEGMENTS {
 	keyboard2:          load = BANK0, run = BANK0, type = ro;
 
 	# FIXED RAM AREAS (and need to appear in them as first)
-	bank_jmptab_front:  load = KERNALRELOCH, run = KERNALH, type = ro;
+	bank_jmptab_front:  load = KERNALRELOHL, run = KERNALHL, type = ro;
 	header:             load = KERNALHDRREL, run = KERNALHDR, type = ro, offset = $0000;
 	jumptab:            load = KERNALRELOCL, run = KERNALL, type = ro;
 	init1:              load = LOKERNAL, run = LOKERNAL, type = ro;

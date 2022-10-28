@@ -48,7 +48,7 @@ pprint.pprint(segments)
 """Solve a multiple knapsack problem using a MIP solver."""
 
 # additional constraints (subtract these sizes from relevant bins and remove these segments from consideration)
-# - bank_jmptab_front   KERNALH     ($d800)
+# - bank_jmptab_front   KERNALHL    ($d800)
 # - header              KERNALHDR   ($c000)
 # - jumptab             KERNALL     ($c100)
 # - init1,init2,hw1b,ramexp2    LOKERNAL    ($9D80)
@@ -57,9 +57,9 @@ pprint.pprint(segments)
 def calculate(segments,verbose=True):
 
     data = {}
-    data['bin_capacities'] = [0x280     ,0x88   ,0x100         ,0xf00         , 0x2680]
-    data['bin_labels'] =     ['LOKERNAL','ICONS','KERNALHDR'   ,'KERNALL'     ,'KERNALH']
-    data['bin_loadlabels'] = ['LOKERNAL','ICONS','KERNALHDRREL','KERNALRELOCL','KERNALRELOCH']
+    data['bin_capacities'] = [ 0x0280   ,0x0088 ,0x0100        ,0x0f00        ,0x400         ,0x2270]
+    data['bin_labels'] =     ['LOKERNAL','ICONS','KERNALHDR'   ,'KERNALL'     ,'KERNALHL'    ,'KERNALH']
+    data['bin_loadlabels'] = ['LOKERNAL','ICONS','KERNALHDRREL','KERNALRELOCL','KERNALRELOHL','KERNALRELOCH']
     assert len(data['bin_capacities']) == len(data['bin_labels'])
     assert len(data['bin_labels']) == len(data['bin_loadlabels'])
 
@@ -67,7 +67,7 @@ def calculate(segments,verbose=True):
     new_segments = []
     for k in segments:
         if k['name']=='bank_jmptab_front':
-            data['bin_capacities'][4] = data['bin_capacities'][4] - k['length'] # KERNALH
+            data['bin_capacities'][4] = data['bin_capacities'][4] - k['length'] # KERNALHL
         elif k['name']=='header':
             data['bin_capacities'][2] = data['bin_capacities'][2] - k['length'] # KERNALHDR
         elif k['name']=='jumptab':

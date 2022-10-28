@@ -178,10 +178,5 @@ FontSH5:
 	dey
 	bne @4
 	lda Z45
-.ifdef bsw128
 	jmp FntShJump
-noop:	rts
-.else
-.assert * = FntShJump, error, "Code must run into FntShJump"
-.endif
 

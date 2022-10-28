@@ -18,6 +18,8 @@
 .import DlgBoxPrep
 .import GetStartHAddr
 
+.import _SaveFile
+
 .import MoveBData
 .import UseSystemFont
 .import ReadFile
@@ -251,8 +253,8 @@ SaveSwapFile:
 	LoadW fileHeader, SwapFileName
 	LoadW r9, fileHeader
 	LoadB r10L, NULL
+	jmp _SaveFile
 
-;.assert * = _SaveFile, error, "Code must run into _SaveFile"
 .elseif .def(bsw128)
 .import MoveBData
 SaveSwapFile:

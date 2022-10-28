@@ -18,7 +18,9 @@
 
 .segment "init1"
 
-.assert * < $c000, error, "InitMachine can't be under ROM (because it calls DoFirstInitIO to disable ROM)"
+ASSERT_NOT_UNDER_ROM
+; InitMachine can't be under ROM (because it calls DoFirstInitIO to disable ROM)
+
 _InitMachine:
 	jsr _DoFirstInitIO
 InitGEOEnv:

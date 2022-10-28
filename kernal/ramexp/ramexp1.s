@@ -35,20 +35,18 @@ atari_pia_portb		= $0100
 atari_nbanks_lo		= $0101
 atari_banks_lo		= $0102 ; +64
 
-; this will be under ROM
+ASSERT_NOT_IN_BANK0
+ASSERT_NOT_UNDER_ROM
+
+; this may be under ROM
 atari_nbanks:	.res 1, 0
 atari_banks:	.res 64, 0
 interrupt_lock:	.res 0, 0
 
-; XXX todo: setup RAM drive (directory 1st block+header+BAM according to mem size)
-
-; detection code
-;.segment "ramexp1"
-
 .segment "ramloader"
 
-.assert * < $4000 || * > $8000, error, "Ram Expansion detection code can't overlap with banked space"
-.assert * < $c000, error, "Ram Expansion detection code can't be under ROM"
+ASSERT_NOT_IN_BANK0
+ASSERT_NOT_UNDER_ROM
 
 CopyRamBanksUp:
 	ldy PIA_PORTB

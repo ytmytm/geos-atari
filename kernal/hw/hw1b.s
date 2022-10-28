@@ -29,7 +29,9 @@
 
 _DoFirstInitIO:
 
-.assert *<$c000, error, "_DoFirstInitIO can't be under ROM (because it turns ROM off)"
+ASSERT_NOT_UNDER_ROM
+
+; _DoFirstInitIO can't be under ROM (because it turns ROM off)
 
 	php
 	sei

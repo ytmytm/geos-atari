@@ -331,6 +331,9 @@
 .macro ASSERT_NOT_IN_BANK0
 .assert * < $4000 || * >= $8000, error, "This code can't be in bank0"
 .endmacro
+.macro ASSERT_NOT_UNDER_ROM
+.assert * < $c000, error, "This code can't be under ROM"
+.endmacro
 .macro START_IO
 .endmacro
 .macro END_IO

@@ -86,6 +86,10 @@
 .import __INPUTDRV_START__
 
 .segment "start"
+
+ASSERT_NOT_IN_BANK0
+ASSERT_NOT_UNDER_ROM
+
 relocate:
 	; copy data from RAM to RAM under ROMs
 	; it's enough to copy whole pages
@@ -777,7 +781,7 @@ OrigResetHandle:
 ;	jmp EnterDeskTop
 
 
-.segment "start"
+;.segment "start"
 
 .import CalcBlksFree
 .import ReadFile
@@ -985,4 +989,7 @@ createDirHead:
 .endif
 
 	rts			; end
+
+ASSERT_NOT_IN_BANK0
+ASSERT_NOT_UNDER_ROM
 

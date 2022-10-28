@@ -28,7 +28,12 @@
 ; Pass:      nothing
 ; Destroyed: a, y, r0 - r2l
 ;---------------------------------------------------------------
-.assert * < $c000, error, "_FirstInit calls InitMachine to enable ROM, can't be under ROM"
+
+ASSERT_NOT_IN_BANK0
+ASSERT_NOT_UNDER_ROM
+
+; _FirstInit calls InitMachine to enable ROM, can't be under ROM
+
 _FirstInit:
 	sei
 	cld

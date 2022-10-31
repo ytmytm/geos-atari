@@ -116,7 +116,7 @@ SEGMENTS {
 	files1a2a:          load = LOKERNAL, type = ro;
 	files1a2b:          load = KERNALRELOCH, run = KERNALH, type = ro;
 	files1b:            load = KERNALRELOCH, run = KERNALH, type = ro;
-	serial1:            load = LOKERNAL, type = ro;
+	serial1:            load = BANK0, type = ro;
 	ramexp2:            load = ICONS, type = ro;
 	displaylist:        load = LOKERNAL, type = ro;
 
@@ -127,7 +127,8 @@ SEGMENTS {
 	header:             load = KERNALHDRREL, run = KERNALHDR, type = ro, offset = $0000;
 
 	# ...
-	tobasic2:           load = KERNALHDRREL, run = KERNALHDR, type = ro;
+	tobasic2:           load = BANK0, run = BANK0, type = ro;
+	time2:              load = BANK0, run = BANK0, type = ro;
 	mainloop1:          load = KERNALHDRREL, run = KERNALHDR, type = ro;
 	files2:             load = LOKERNAL, run = LOKERNAL, type = ro;
 	dlgbox2:            load = KERNALHDRREL, run = KERNALHDR, type = ro;
@@ -186,7 +187,7 @@ SEGMENTS {
 	panic1:             load = KERNALRELOCH, run = KERNALH, type = ro;
 	panic2:             load = KERNALRELOCH, run = KERNALH, type = ro;
 	panic3:             load = KERNALRELOCH, run = KERNALH, type = ro;
-	serial2:            load = KERNALRELOCH, run = KERNALH, type = ro;
+	serial2:            load = BANK0, run = BANK0, type = ro;
 	patterns:           load = BANK0, run = BANK0, type = ro;
 	fonts1:             load = KERNALRELOCH, run = KERNALH, type = ro;
 	bswfont:            load = KERNALRELOCH, run = KERNALH, type = ro;

@@ -121,6 +121,10 @@ SEGMENTS {
 	graph4:             load = BANK0, run = BANK0, type = ro;
 	keyboard2:          load = BANK0, run = BANK0, type = ro;
 	graph2l2:           load = BANK0, run = BANK0, type = ro;
+	tobasic2:           load = BANK0, run = BANK0, type = ro;
+	time2:              load = BANK0, run = BANK0, type = ro;
+	serial1:            load = BANK0, run = BANK0, type = ro;
+	serial2:            load = BANK0, run = BANK0, type = ro;
 
 	# FIXED RAM AREAS (and need to appear in them as first)
 	bank_jmptab_front:  load = KERNALRELOHL, run = KERNALHL, type = ro;

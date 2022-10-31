@@ -134,7 +134,12 @@ AtariPlayersInit:
 ; Destroyed: a, y, r5
 ;---------------------------------------------------------------
 _DrawSprite:
-	ldy r3L
+	lda r3L
+	and #%11111100			; support only 0-3
+	beq :+
+	rts
+
+:	ldy r3L
 	; default size the same as on C64, but InitTextPrompt can modify this
 	lda #21
 	sta curYSize,y

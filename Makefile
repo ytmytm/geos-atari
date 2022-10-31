@@ -215,7 +215,7 @@ kernal/kernal_$(VARIANT).cfg.out: kernal/kernal_$(VARIANT).cfg
 
 $(BUILD_DIR)/kernal/kernal.bin: $(PREFIXED_KERNAL_OBJS) kernal/kernal_$(VARIANT).cfg.out
 	@mkdir -p $$(dirname $@)
-	$(LD) -C kernal/kernal_$(VARIANT).cfg.out $(PREFIXED_KERNAL_OBJS) -o $@ -m $(BUILD_DIR)/kernal/kernal.map -Ln $(BUILD_DIR)/kernal/kernal.lab
+	$(LD) -C kernal/kernal_$(VARIANT).cfg.out $(PREFIXED_KERNAL_OBJS) -o $@ -m $(BUILD_DIR)/kernal/kernal.map -Ln $(BUILD_DIR)/kernal/kernal.lbl
 
 # a must!
 love:	

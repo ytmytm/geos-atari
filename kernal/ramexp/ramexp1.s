@@ -41,7 +41,7 @@ ASSERT_NOT_UNDER_ROM
 ; this may be under ROM
 atari_nbanks:	.res 1, 0
 atari_banks:	.res 64, 0
-interrupt_lock:	.res 0, 0
+interrupt_lock:	.res 1, 0
 
 .segment "ramloader"
 

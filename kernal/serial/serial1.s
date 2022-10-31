@@ -14,6 +14,8 @@
 
 .segment "serial1"
 
+ASSERT_IN_BANK0
+
 SerialNumber:
 .ifdef wheels
 	.word $DF96

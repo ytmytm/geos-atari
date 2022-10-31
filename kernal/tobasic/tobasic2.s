@@ -8,11 +8,13 @@
 .include "kernal.inc"
 .include "atari.inc"
 
-.global _ToBASIC
+.global __ToBASIC
 
 .segment "tobasic2"
 
-_ToBASIC:
+ASSERT_IN_BANK0
+
+__ToBASIC:
 	; this can't be under ROM, copy trapoline before running
 	sei
 	ldx #$ff

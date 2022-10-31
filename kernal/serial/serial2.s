@@ -12,10 +12,12 @@
 
 .import SerialNumber
 
-.global _GetSerialNumber
-.global GetSerialNumber2
+.global __GetSerialNumber
+.global _GetSerialNumber2
 
 .segment "serial2"
+
+ASSERT_IN_BANK0
 
 ;---------------------------------------------------------------
 ; GetSerialNumber                                         $C196
@@ -24,10 +26,10 @@
 ; Return:    r0  serial nbr of your kernal
 ; Destroyed: a
 ;---------------------------------------------------------------
-_GetSerialNumber:
+__GetSerialNumber:
 	lda SerialNumber
 	sta r0L
-GetSerialNumber2:
+_GetSerialNumber2:
 	lda SerialNumber+1
 	sta r0H
 	rts

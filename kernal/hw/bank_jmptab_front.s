@@ -21,6 +21,9 @@
 .global _InitTextPrompt
 .global _PromptOn, _PromptOff
 .global _SetPattern
+.global _ToBASIC
+.global _DoUpdateTimeSeconds
+.global _GetSerialNumber
 
 .segment "bank_jmptab_front"
 
@@ -72,6 +75,9 @@ _PromptOff:		jsr CallBackBank
 _Dabs:			jsr CallBackBank
 _Dnegate:		jsr CallBackBank
 _SetPattern:		jsr CallBackBank
+_ToBASIC:		jsr CallBackBank
+_DoUpdateTimeSeconds:	jsr CallBackBank
+_GetSerialNumber:	jsr CallBackBank
 
 	.assert * - jumpstart < $0100, error, "jump table too long"
 	.assert * - jumpstart = njumps, error, "different length of jump table in front/back bank"

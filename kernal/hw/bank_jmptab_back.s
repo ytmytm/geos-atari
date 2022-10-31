@@ -12,6 +12,9 @@
 .import __InitTextPrompt
 .import __PromptOn, __PromptOff
 .import __SetPattern
+.import __ToBASIC
+.import __DoUpdateTimeSeconds
+.import __GetSerialNumber
 
 .global njumps
 
@@ -63,6 +66,9 @@ jumpstart:
 	jmp __Dabs	;+
 	jmp __Dnegate	;+
 	jmp __SetPattern
+	jmp __ToBASIC
+	jmp __DoUpdateTimeSeconds
+	jmp __GetSerialNumber
 
 njumps = * - jumpstart
 

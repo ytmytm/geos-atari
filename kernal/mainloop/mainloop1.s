@@ -13,6 +13,7 @@
 .import _MainLoop2
 .import _DoCheckButtons
 .import _DoCheckDelays
+.import _DoUpdateTime
 
 .import CallRoutine
 
@@ -25,6 +26,7 @@ _MainLoop:
 	jsr _DoCheckButtons
 	jsr _ExecuteProcesses
 	jsr _DoCheckDelays
+	jsr _DoUpdateTime
 	lda appMain+0
 	ldx appMain+1
 _MNLP:	jsr CallRoutine

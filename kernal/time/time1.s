@@ -11,7 +11,10 @@
 .import alarmWarnFlag
 .import dateCopy
 
+.import _DoUpdateTimeSeconds
+
 .global _DoUpdateTime
+.global __DoUpdateTimeSeconds
 .global jiffyCounter
 
 .segment "ramexp2"
@@ -20,35 +23,64 @@ jiffyCounter:	.res 1, 0
 
 .segment "time1"
 
+ASSERT_NOT_IN_BANK0
+
 ; called from mainloop
 _DoUpdateTime:
-	lda jiffyCounter			; at least one second passed?
-	cmp #50					; XXX this depends on PAL/NTSC!
+	CmpBI jiffyCounter, 50			; at least one second passed? (XXX PAL/NTSC!)
 	bcs :+
 	rts
 
-:	ldx #0
-	subv 50					; XXX this depends on PAL/NTSC
+:	subv 50					; XXX this depends on PAL/NTSC
 	sta jiffyCounter
-	bpl :+
-	stx jiffyCounter			; negative? we might lose a second here
-:	inc seconds				; next second
-	lda seconds
-	cmp #60
+	inc seconds
+	jmp _DoUpdateTimeSeconds
+
+.segment "time2"
+
+ASSERT_IN_BANK0
+
+; called from mainloop
+__DoUpdateTimeSeconds:
+	ldx #0
+	CmpBI seconds, 60
 	bcc :+
-	stx seconds				; next minute
+	subv 60					; could be a minute or more
+	sta seconds				; next minute
 	inc minutes
-	lda minutes
-	cmp #60
-	bcc :+
+	CmpBI minutes, 60
+	bne :+
 	stx minutes				; next hour
 	inc hour
-	lda hour
-	cmp #24
-	bcc :+
+	CmpBI hour, 24
+	bne :+
 	stx hour
 	jsr DateUpdate				; next day
-:	rts 
+:
+	; convert time to BCD and pretend that CIA1 TOD clock exists (for DeskTop/Gateway)
+	ldx seconds
+	lda bcdtab,x
+	sta $DC09		; cia1 TOD seconds
+	ldx minutes
+	lda bcdtab,x
+	sta $DC0A
+	ldx hour
+	lda bcdtabhour,x
+	sta $DC0B
+	rts
+
+	; quite some space for this, but it's fast and we can still afford it in bank0
+bcdtabhour:
+	.byte $00,$01,$02,$03,$04,$05,$06,$07,$08,$09,$10,$11
+	.byte $80,$81,$82,$83,$84,$85,$86,$87,$88,$89,$90,$91
+
+bcdtab:
+	.repeat 6, tens
+	.repeat 10, ones
+	.byte tens*16+ones
+	.endrep
+	.endrep
+
 
 .if 0=1
 	ldy #2					; this is done for RBoot, but does it even make sense on Atari?
@@ -83,8 +115,7 @@ DateUpdate:
 @1:	ldy #1
 	sty day
 	inc month
-	lda month
-	cmp #13
+	CmpBI month, 13
 	bne @2
 	sty month
 	inc year

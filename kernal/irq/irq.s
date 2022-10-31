@@ -110,7 +110,6 @@ _NMIHandler:
 :	lda intTopVector
 	ldx intTopVector+1
 	jsr CallRoutine
-	jsr _DoUpdateTime			; here, not in mainloop2.s
 	lda intBotVector
 	ldx intBotVector+1
 	jsr CallRoutine

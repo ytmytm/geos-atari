@@ -56,11 +56,11 @@ _UpdateMouse:
 :	lsr
 	bcc :+
 	pha
-	SubVW 1, mouseXPos
+	SubVW 2, mouseXPos
 	pla
 :	lsr
 	bcc :+
-	IncW mouseXPos
+	AddVW 2, mouseXPos
 	rts
 
 readJoystickPort:

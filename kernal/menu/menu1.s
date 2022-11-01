@@ -103,16 +103,18 @@ DoMenu1:
 	sec
 DoMenu1_1:
 	php
-	PushB dispBufferOn
+	jsr CopyMenuCoords
+	plp
+	bcc :+
+	PushW r11
+	jsr _ImprintRectangle
+	PopW r11
+:	PushB dispBufferOn
 	LoadB dispBufferOn, ST_WR_FORE
 	PushW r11
-	jsr CopyMenuCoords
 	PushW curPattern
 	lda #0
 	jsr _SetPattern
-.ifdef atari
-	jsr _ImprintRectangle			; cache whatever is under the menu
-.endif
 	jsr _Rectangle
 	PopW curPattern
 .ifdef wheels
@@ -138,7 +140,6 @@ DoMenu1_1:
 	jsr DrawMenu
 .endif
 	PopB dispBufferOn
-	plp
 	bbsf 6, menuOptNumber, @1
 	bcc @4
 @1:	ldx menuNumber

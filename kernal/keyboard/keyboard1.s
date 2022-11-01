@@ -33,7 +33,7 @@ ASSERT_NOT_IN_BANK0
 
 _DoKeyboardScan:
 	; check for shift/control first, keep GEOS mapping
-	; todo: modify by cbm key (how?)
+	; todo: modify by cbm key - ORA #$80 if pressed with CBM as a keyboard shortcut
 	lda POKEY_KBCODE
 	tax
 	and #%11000000		; top 2 bits, 0=pressed

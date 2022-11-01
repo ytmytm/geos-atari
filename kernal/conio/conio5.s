@@ -47,10 +47,17 @@ PrmptOff1:
 
 __InitTextPrompt:
 	tay
+.import Player1Data
+	; clear whole sprite
+	ldx #0
+	txa
+:	sta Player1Data,x
+	inx
+	bne :-
+	txa
 
 	; clear the buffer
 	ldx #64
-	lda #0
 :	sta spr1pic-1,x
 	dex
 	bne :-

@@ -70,6 +70,10 @@ Player2Data:	.res $0100
 Player3Data:	.res $0100
 
 .global GEOS_PMBASE
+; InitGEOEnv
+.global Player0Data
+; InitTextPrompt
+.global Player1Data
 
 .import __PLAYERS_START__
 GEOS_PMBASE = __PLAYERS_START__ - PLAYER0_OFFS

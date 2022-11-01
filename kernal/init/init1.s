@@ -12,6 +12,8 @@
 .import InitRamTab
 .import _DoFirstInitIO
 .import _InitRam
+.import _FillRam
+.import Player0Data
 
 .global InitGEOEnv
 .global _InitMachine
@@ -24,5 +26,10 @@ ASSERT_NOT_UNDER_ROM
 _InitMachine:
 	jsr _DoFirstInitIO
 InitGEOEnv:
+	; clear all sprite data
+	LoadB r2L, 0
+	LoadW r1, Player0Data
+	LoadW r0, $0400
+	jsr _FillRam
 	LoadW r0, InitRamTab
 	jmp _InitRam

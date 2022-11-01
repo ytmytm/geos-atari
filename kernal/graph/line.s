@@ -284,10 +284,10 @@ __RecoverLineDo:
 	beq :+
 
 @recovercard:
-	tax
+	pha
 	and (r5),y
 	sta r7L
-	txa
+	pla
 	eor #$ff
 	and (r6),y
 	ora r7L

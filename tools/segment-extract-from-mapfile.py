@@ -60,9 +60,9 @@ pprint.pprint(segments)
 def calculate(segments,verbose=True):
 
     data = {}
-    data['bin_capacities'] = [ 0x0280   ,0x0088 ,0x0100        ,0x0f00        ,0x400         ,0x2270]
-    data['bin_labels'] =     ['LOKERNAL','ICONS','KERNALHDR'   ,'KERNALL'     ,'KERNALHL'    ,'KERNALH']
-    data['bin_loadlabels'] = ['LOKERNAL','ICONS','KERNALHDRREL','KERNALRELOCL','KERNALRELOHL','KERNALRELOCH']
+    data['bin_capacities'] = [ 0x0280   ,0x0088 ,0x0100        ,0x0f00        ,0x400         ,0x2170        ,0x00f0]
+    data['bin_labels'] =     ['LOKERNAL','ICONS','KERNALHDR'   ,'KERNALL'     ,'KERNALHL'    ,'KERNALH'     ,'CIAGAP']
+    data['bin_loadlabels'] = ['LOKERNAL','ICONS','KERNALHDRREL','KERNALRELOCL','KERNALRELOHL','KERNALRELOCH','CIAGAPRELOC']
     assert len(data['bin_capacities']) == len(data['bin_labels'])
     assert len(data['bin_labels']) == len(data['bin_loadlabels'])
 

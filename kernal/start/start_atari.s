@@ -87,6 +87,8 @@
 .import __INPUTDRVRELOC_START__
 .import __INPUTDRVRELOC_LAST__
 .import __INPUTDRV_START__
+.import __CIAGAPRELOC_START__
+.import __CIAGAP_START__
 
 .segment "start"
 
@@ -129,7 +131,14 @@ relocate:
 	inc r1H
 	dex
 	bpl :-
-	; $DC10-$FE7F
+	; $DC10-$DCFF
+	LoadW r0, __CIAGAPRELOC_START__
+	LoadW r1, __CIAGAP_START__
+:	lda (r0),y
+	sta (r1),y
+	iny
+	bne :-
+	; $DD10-$FE7F
 	LoadW r0, __KERNALRELOCH_START__
 	LoadW r1, __KERNALH_START__
 	ldx #>(__KERNALRELOCH_LAST__ - __KERNALRELOCH_START__)

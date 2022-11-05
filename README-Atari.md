@@ -4,7 +4,11 @@ GEOS 2.0 by Berkeley Softworks
 
 This is a fork of [GEOS 2.0 for C64/128 reverse-engineered](https://github.com/mist64/geos) by *Maciej Witkowiak*, *Michael Steil*
 
-GEOS 2.0 ported to 8-bit Atari by *Maciej Witkowiak*
+GEOS 2.0 was ported to 8-bit Atari by *Maciej Witkowiak*
+
+<img src="screenshots/desktop.png" alt="DeskTop on an Atari" width=800>
+<img src="screenshots/notepad.png" alt="Desk accessory over DeskTop" width=800>
+<img src="screenshots/geowrite.png" alt="GeoWrite on an Atari" width=800>
 
 ## What is GEOS?
 

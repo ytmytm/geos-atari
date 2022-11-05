@@ -38,8 +38,8 @@ ASSERT_IN_BANK0
 ; + tab->tab
 ; + help -> pound (not so sure)
 ; + ctrl+<std> -> cursors
-; todo:
-; - inv -> C= (modifier like ctrl/shift)
+; + inv -> unused (do nothing)
+; + option -> C= (modifier)
 
 ; unshifted
 KbdDecodeTab:

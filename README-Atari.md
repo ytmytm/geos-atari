@@ -35,6 +35,8 @@ Run emulator and make sure to choose PAL system with at least 128K/320K of RAM. 
 
 GEOS will boot into DeskTop in just few seconds.
 
+Use OPTION key in place of C= for keyboard shortcuts.
+
 ## Atari port remarks
 
 ### Compatibility
@@ -79,7 +81,7 @@ All the rectangle functions (*Rectangle*, *InvertRectangle*, *ImprintRectangle*,
 
 ### System startup
 
-The boot code jumps right into DeskTop, but it should at least try to run Auto-Exec applications from RAM disk.
+The boot code jumps right into DeskTop, but eventually it should at least try to run Auto-Exec applications from RAM disk.
 In order to do it, that code has to be moved into higher memory area (at least over $5000 out of current $2000).
 
 ### Players (sprites)
@@ -121,18 +123,21 @@ Pages $C0-$CF contain GEOS Kernal code
 
 Pages $D0-$D7 are I/O
 
-Pages $D8-$FE contain GEOS Kernal code
+Pages $D8-$FE contain GEOS Kernal code, except 16 byte buffers at $DC00-0F and $DD00-0F. Atari Kernal emulates CIA#1 TOD clock in that space and remaining area is a buffer in case a user program wants to use TOD clock from CIA#2, write directly to user port (parallel printer port) or alter keyboard/joystick ports.
 
 Pages $FE-$FF contain input driver
 
 Extra memory banks:
 
-bank0 $4000-$5FFF contains GEOS Kernal code (using jump table from $D800)
+bank0 $4000-$5FFF contains GEOS Kernal code (using jump table from $D800). Area $5000-$5FFF is reserved for (future) SIO disk driver.
+
 bank0 $6000-$7FFF contains screen back buffer, drawing routines with imprint/recover screen from this area, not from system RAM
 
 bank1 $4000-$4100 contains disk header and block allocation map (BAM)
+
 bank1 $4200-$???? chained directory entries
-all the remaining area is free to be used by files
+
+all the remaining areas are free to be used by files
 
 Unlike C128 there is no special handling for desk accessories - they will have swap file created on RAM disk, which will be only a little slower than copying memory to reserved space.
 
@@ -148,7 +153,8 @@ Joystick driver can be changed during runtime, but you can't use any joystick dr
 
 Mapping of special keys, mostly untested:
 
-    - BREAK does nothing
+    - BREAK, INV do nothing
+    - OPTION is C= key for keyboard shortcuts
     - CAPS is RUN/STOP
     - ESC is <- (left arrow)
     - SHIFT+Delete is Backspace
@@ -157,10 +163,9 @@ Mapping of special keys, mostly untested:
     - CTRL+Return is LineFeed
     - Tab is Tab, Clear is Clear, Delete is Del
     - Help is pound sign
-    - cursor arrows Atari style (CTRL+arrow key)
-    - Inv is supposed to be C= (Commodore key) for keyboard shortcuts
+    - cursor arrows work Atari style (CTRL+arrow key)
 
-Other console keys (START, OPTION) are not scanned and not used.
+Other console keys (START, SELECT) are not scanned and not used.
 
 ### Disk drives
 
@@ -195,7 +200,7 @@ There are none, they will have to be ported. See Disk Drive section for notes ab
 
 There is no CIA time-of-day (TOD) clock, timekeeping is done by counting vertical blank interrupts. During banked operations a short interrupt routine is called and some of these events may be lost.
 
-Clock in DeskTop doesn't work, my guess is that DeskTop tries to read CIA I/O registers directly.
+TOD clock from CIA#1 is emulated by converting current time into BCD and storing into $DC08-$DC0A, where DeskTop can read it directly.
 
 There is no support for an alarm clock. It's tied to CIA TOD clock hardware feature.
 The system doesn't provide any function to set the alarm (it's done in hardware by a Desk Accessory) you can only choose if/how it should react to the alarm.
@@ -222,3 +227,8 @@ The result is in `build/<atari system>/GEOS<atari system>.XEX` file, ready to be
 
 I am abusing GCC preprocessor to add conditionals to ld65 configuration files and expand environment variables inside one of the ca65 sources.
 Perhaps this should be rewritten to use proper macro expansion language, like `m4`.
+
+There is another program in `tools` directory, that analyses resulting `build/<atari system>/kernal/kernal.map` file from pass 1 and
+uses optimizer to put GEOS Kernal code into all available gaps as neatly as possible, so that as much as possible remaining area stays
+just under $FE80 (input driver) address.
+

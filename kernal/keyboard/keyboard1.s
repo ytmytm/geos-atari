@@ -55,6 +55,18 @@ _DoKeyboardScan:
 :	sty PIA_PORTB			; restore memory config
 	ldy #0
 	sty interrupt_lock
+	cmp #KEY_INVALID
+	bne :+
+	rts
+:	tay				; hold it for a while
+	LoadB GTIA_CONSOL, 0
+	lda GTIA_CONSOL
+	and #%00000100			; option?
+	bne :+
+	tya
+	ora #%10000000			; yes, set 7th bit for shortcut
+	tay
+:	tya
 	jmp KbdScanHelp2
 
 ; KbdNextKey, KbdQueFlag, KBDbncTab, KBDmultTab = free space for variables

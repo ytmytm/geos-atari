@@ -13,6 +13,7 @@ ifeq ($(SYSTEM), atari130)
 VARIANT      = atari
 ATARI_BANKS  = 4
 BUILD        = atari_130
+RAMDISK_CVT  = ramdisk/cvt-128k
 XEX_RESULT   = GEOS_ATARI_130XE.XEX
 endif
 
@@ -20,6 +21,7 @@ ifeq ($(SYSTEM), atari320)
 VARIANT      = atari
 ATARI_BANKS  = 16
 BUILD        = atari_320
+RAMDISK_CVT  = ramdisk/cvt-320k
 XEX_RESULT   = GEOS_ATARI_320K.XEX
 endif
 
@@ -201,7 +203,7 @@ endif
 	export
 
 $(BUILD_DIR)/image00.img:
-	tools/mkramdisk.py -n $(ATARI_BANKS) -o $(BUILD_DIR)/image ramdisk/cvt/*
+	tools/mkramdisk.py -n $(ATARI_BANKS) -o $(BUILD_DIR)/image $(RAMDISK_CVT)/*
 
 kernal/hw/ramloader.s: kernal/hw/ramloader.s.in $(BUILD_DIR)/image00.img
 	cat $< | gcc -D __ATARI_BANKS=$(ATARI_BANKS) -D __BUILD_DIR=\"$(BUILD_DIR)\" -E - -o - | sed -e 's/^#/;/g' > $@

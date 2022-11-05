@@ -9,7 +9,7 @@
 
 .segment "inputdrv"
 
-.assert * = $FE80, error, "Input driver not at $C000"
+.assert * = $FE80, error, "Input driver not at $FE80"
 
 MouseInit:
 	jmp _MouseInit

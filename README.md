@@ -1,8 +1,9 @@
+
+# Go to [README-Atari](README-Atari.md) first!
+
 # GEOS Source Code
 
 by Berkeley Softworks, reverse engineered by *Maciej Witkowiak*, *Michael Steil*.
-
-Go to [README-Atari](README-Atari.md) first!
 
 ## Description
 

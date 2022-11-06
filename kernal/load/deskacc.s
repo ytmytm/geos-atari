@@ -224,8 +224,21 @@ _RstrAppl:
 	LoadW r3, fileTrScTab
 	jsr FastDelFile
 	txa
+@1:
 .endif
-@1:	ldx DeskAccSP
+.ifdef atari
+	; clear any sprite glitches left by desk acc
+.import Player0Data
+	ldx #0
+	txa
+:	sta Player0Data,x
+	sta Player0Data+$0100,x
+	sta Player0Data+$0200,x
+	sta Player0Data+$0300,x
+	inx
+	bne :-
+.endif
+	ldx DeskAccSP
 	txs
 	tax
 	PushW DeskAccPC

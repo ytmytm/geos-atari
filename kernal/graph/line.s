@@ -106,8 +106,14 @@ HLinEnd2:
 __HorizontalLineDo:
 	ldy r3L				; left card offset
 	ldx r4L
+	bne :+
 
-	lda r8L				; need to handle first card bit mask?
+	lda r8L
+	ora r8H
+	sta r8H
+	bra @onlyone
+
+:	lda r8L				; need to handle first card bit mask?
 	beq @noleft
 					; yes, handle left byte (value already in A)
 	eor #$ff			; reverse screen protection bitmask
@@ -137,7 +143,7 @@ __HorizontalLineDo:
 @nowhole:
 	lda r8H				; need to handle last card?
 	beq HLinEnd3
-
+@onlyone:
 	eor #$ff
 	and r7L
 	sta r11H

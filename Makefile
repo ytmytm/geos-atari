@@ -203,6 +203,7 @@ endif
 	export
 
 $(BUILD_DIR)/image00.img:
+	chmod +x tools/mkramdisk.py
 	tools/mkramdisk.py -n $(ATARI_BANKS) -o $(BUILD_DIR)/image $(RAMDISK_CVT)/*
 
 kernal/hw/ramloader.s: kernal/hw/ramloader.s.in $(BUILD_DIR)/image00.img

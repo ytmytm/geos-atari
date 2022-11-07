@@ -25,7 +25,7 @@ jobs:
 
       # make 320K
       - name: Build 320K option
-        run: make SYSTEM=atari320 -j 8
+        run: make clean && make SYSTEM=atari320
 
       - name: Archive 320K binary XEX
         uses: actions/upload-artifact@v3

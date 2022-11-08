@@ -218,9 +218,11 @@ There is no PAL/NTSC detection yet, the system is assumed to be PAL.
 
 ## Building the system
 
-It's best to use Linux or WSL for that.
+A github workflow is setup in *Actions*, you can find latest binaries attached to *CI* workflow run results.
 
-Install Python3 and cc65 suite and then:
+If you want to build the system on your own it's best to use Linux or WSL for that.
+
+Install sed, Python 3 and cc65 suite and then:
 
 - if you like, run Makefile from `cc65/apps` (this will build filesel.cvt - tiny application launcher for DeskTop replacement among others)
 - put the CVT files that you want to have in the system into `ramdisk/cvt-128k/` or `ramdisk/cvt-320k`

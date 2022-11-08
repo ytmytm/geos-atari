@@ -61,7 +61,7 @@ _UpdateMouse:
 :	lsr
 	bcc :+
 	AddVW 2, mouseXPos
-	rts
+:	rts
 
 readJoystickPort:
 	lda GTIA_TRIG0

@@ -12,7 +12,7 @@ GEOS 2.0 was ported to 8-bit Atari by *Maciej Witkowiak*
 
 ## What is GEOS?
 
-Please read main README.md for that.
+Please read [main README.md](README.md) for that.
 
 ## Atari port requirements
 
@@ -59,14 +59,14 @@ Compatibility problems come from:
 - memory map changes (hires bitmap screen with different organization for ANTIC than for VIC)
 - missing capatibilities (24-pixel wide sprites, color matrix for hires mode)
 
-Programs will not work correctly if:
+Programs will not work correctly if they:
 
-- they use sprites or change their colors (e.g. Preferences Manager)
-- they change color matrix in 40-column mode (e.g. DESK TOP)
-- they require REU
-- they access bitmap screen in 40-column mode directly (e.g. Maverick)
-- they have custom recovery routine (e.g. GeoWrite)
-- they write directly to I/O registers (e.g printer drivers)
+- use sprites or change their colors (e.g. Preferences Manager)
+- change color matrix in 40-column mode (e.g. DESK TOP)
+- require REU
+- access bitmap screen in 40-column mode directly (e.g. Maverick)
+- have custom recovery routine (e.g. GeoWrite)
+- write directly to I/O registers (e.g printer drivers)
 
 They may not work at all or show some graphical glitches. For example, if an application tries to add some color it will write to `COLOR_MATRIX` space, which is now occupied by Player0/1/2/3 data, so mouse pointer will be temporarily overwritten.
 
@@ -105,7 +105,7 @@ It will take every third byte to show only the leftmost 8-pixels. The sprite wil
 
 You can see how it works in DeskTop if you select a file and then try to drag it to the border area (under disk window).
 
-Missiles/Player5 are not used.
+Missiles/Player4 are not used.
 
 ### Input devices
 
@@ -147,18 +147,18 @@ Atari has less RAM available because it can't switch off I/O and allocates whole
 
 | Pages | Description  |
 |-------:|:--------------|
-| $00  | used for Kernal and application virtual registers, but addresses used by C64/128 Kernal are not touched (about $80-$FF) |
+| $00  | used for Kernal and application virtual registers, but locations used by C64/128 Kernal are not touched (about $80-$FF) |
 | $02-$03 | not touched by loader, boot code nor GEOS Kernal itself |
 | $04-$5F | free to be used by applications |
-| $60-$7F | screen backbuffer, but I moved them to bank 0 of expanded RAM, so any native Atari GEOS application (or pathed DeskTop) can use it |
+| $60-$7F | screen backbuffer, but on Atari moved to bank 0 of expanded RAM; any native Atari GEOS application can use it |
 | $80-$8B | system variables |
-| $8C-$8F | on C64/128 this is color matrix, on Atari this is reserved for Player0-3 graphics |
+| $8C-$8F | color matrix on C64/128, Player0-3 graphics on Atari |
 | $90-$9D | reserved for disk driver, this would be swapped with expanded RAM by *SetDevice* function |
 | $9E-$9F | GEOS Kernal code and variables |
 | $A0-$BF | front buffer for 320x200 hires screen, it is shifted by 56 bytes to match exactly the 4K boundary on 101st line and keep linear addressing |
 | $C0-$CF | GEOS Kernal code |
 | $D0-$D7 | I/O |
-| $D8-$FE | GEOS Kernal code, except 16 byte buffers at $DC00-0F and $DD00-0F. Atari Kernal emulates CIA#1 TOD clock in that space and remaining area is a buffer in case a user program wants to use TOD clock from CIA#2, write directly to user port (parallel printer port) or alter keyboard/joystick ports |
+| $D8-$FE | GEOS Kernal code, except 16 byte buffers at $DC00-0F and $DD00-0F. Atari GEOS Kernal emulates CIA#1 TOD clock in that space and remaining area is a buffer in case a user program wants to use CIA#2 TOD clock, write directly to user port (parallel printer port) or alter keyboard/joystick ports |
 | $FE-$FF | input driver (joystick) |
 
 Extra memory banks:
@@ -168,21 +168,19 @@ Extra memory banks:
 | 0 | $4000-$4FFF | GEOS Kernal code (using jump table from $D800)
 | 0 | $5000-$5FFF | is reserved for (future) SIO disk driver |
 | 0 | $6000-$7FFF | screen back buffer, drawing routines with imprint/recover screen from this area, not from system RAM |
-| 1 | $4000-$40FF | disk header and block allocation map (BAM) |
-| 1 | $4100-$41ff | first directory block
+| 1 | $4000-$40FF | disk header and block allocation map (BAM) (track 1 sector 0) |
+| 1 | $4100-$41ff | first directory block (track 1 sector 1) |
 
-all the remaining areas are free to be used by files
-
-Unlike C128 there is no special handling for desk accessories - they will have swap file created on RAM disk, which will be only a little slower than copying memory to reserved space.
+all the remaining areas are free to be used by files.
 
 ### Disk drives
 
 There is only one disk device available: RAM drive.
 
-The supposed disk driver for SIO devices may use hardware directly or via ROM code. There are functions *InitForIO* and *DoneForIO* that in GEOS64/128 prepare
+A disk driver for SIO devices may use the hardware directly or via ROM code. There are functions *InitForIO* and *DoneForIO* that in GEOS64/128 prepare
 the system for using ROM routines for I/O. GEOS doesn't touch memory in $0200-$03ff. Some of zero-page registers are used by the system, but they can be easily preserved.
 
-The requirements for a disk driver are:
+The requirements for such disk driver are:
 
 - it needs to read/write 256-byte sectors at a time
 - sectors are addressed by 8-bit track and sector numbers

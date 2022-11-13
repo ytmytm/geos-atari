@@ -4,7 +4,9 @@ GEOS 2.0 by Berkeley Softworks
 
 This is a fork of [GEOS 2.0 for C64/128 reverse-engineered](https://github.com/mist64/geos) by *Maciej Witkowiak*, *Michael Steil*
 
-GEOS 2.0 was ported to 8-bit Atari by *Maciej Witkowiak*
+GEOS 2.0 was ported to 8-bit Atari by *Maciej Witkowiak* in October 2022.
+
+There is also a patched [geoWrite](https://github.com/ytmytm/geowrite-atari) that works better on an Atari.
 
 <img src="screenshots/desktop.png" alt="DeskTop on an Atari" width=800>
 <img src="screenshots/notepad.png" alt="Desk accessory over DeskTop" width=800>
@@ -77,12 +79,10 @@ They may not work at all or show some graphical glitches. For example, if an app
 | IconEditor | too many visual glitches to be usable |
 | GeoPublish | not as bad as GeoPaint, but still not usable |
 | GeoCalc | crashes because it needs CBM BASIC for floating-point calculations |
-| GeoWrite | patched to Atari works ok-ish if you type slowly |
+| [GeoWrite](https://github.com/ytmytm/geowrite-atari) | patched for Atari works ok-ish if you type slowly |
 | GeoFile | minimal visual glitches |
 | GeoChart | works fine except area-fill chart |
 | GeoDex | works fine |
-
-Just like on C64 the processes (sleep and multitasking) are clocked by video frame rate.
 
 ### Performance
 
@@ -90,6 +90,8 @@ Atari port is probably somewhat faster than C64/128. Atari has higher CPU clock 
 All the rectangle functions (*Rectangle*, *InvertRectangle*, *ImprintRectangle*, *RecoverRectangle*) have been optimized to reuse calculated screen coordinates.
 
 Keyboard has its own interrupt and doesn't have to be scanned for every row/column.
+
+Just like on C64 the processes (sleep and multitasking) are clocked by video frame rate.
 
 ### System startup
 
@@ -113,7 +115,7 @@ Missiles/Player4 are not used.
 
 A very simple joystick driver controls the mouse pointer. This driver doesn't support acceleration (but it should!). I couldn't get the original joystick driver to work.
 
-Joystick driver can be changed during runtime, but the code has to be ported - you can't use any joystick drivers from GEOS64/128.
+Joystick driver can be changed during runtime, but the code has to be ported first - you can't use any joystick drivers from GEOS64/128.
 
 #### Keyboard
 
@@ -153,7 +155,7 @@ Atari has less RAM available because it can't switch off I/O and allocates whole
 | $60-$7F | screen backbuffer, but on Atari moved to bank 0 of expanded RAM; any native Atari GEOS application can use it |
 | $80-$8B | system variables |
 | $8C-$8F | color matrix on C64/128, Player0-3 graphics on Atari |
-| $90-$9D | reserved for disk driver, this would be swapped with expanded RAM by *SetDevice* function |
+| $90-$9D | reserved for disk driver, this area would be swapped with expanded RAM by *SetDevice* function |
 | $9E-$9F | GEOS Kernal code and variables |
 | $A0-$BF | front buffer for 320x200 hires screen, it is shifted by 56 bytes to match exactly the 4K boundary on 101st line and keep linear addressing |
 | $C0-$CF | GEOS Kernal code |
@@ -204,9 +206,9 @@ There are none, they will have to be ported. See Disk Drive section for notes ab
 
 ### Time and date
 
-There is no CIA time-of-day (TOD) clock, timekeeping is done by counting vertical blank interrupts. During banked operations a short interrupt routine is called and some of these events may be lost.
+There is no CIA time-of-day (TOD) clock, timekeeping is done by counting vertical blank interrupts. During banked operations a short interrupt routine is called that doesn't advance seconds.
 
-TOD clock from CIA#1 is emulated by converting current time into BCD and storing into $DC08-$DC0A, where DeskTop reads it directly.
+TOD clock from CIA#1 is emulated by converting current time into BCD and storing it back into $DC08-$DC0A (as if it came from CIA chip), where DeskTop reads it directly.
 
 There is no support for an alarm clock. It's tied to CIA TOD clock hardware feature.
 The system doesn't provide any function to set the alarm (it's done in hardware by a Desk Accessory) you can only choose if/how it should react to the alarm.
@@ -240,3 +242,4 @@ There is another program in `tools` directory, that analyses resulting `build/<a
 uses optimizer to put GEOS Kernal code into all available gaps as neatly as possible, so that as much as possible remaining area stays
 just under $FE80 (input driver) address.
 
+[GeoWrite](https://github.com/ytmytm/geowrite-atari) can be rebuilt by checking out `atari` branch and issuing `make` followed by `make cvt`.

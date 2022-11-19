@@ -127,15 +127,15 @@ Mapping of special keys:
 | INV       | unused |
 | OPTION    | C= (for keyboard shortcuts) |
 | CAPS      | RUN/STOP |
-| ESC       | <- (left arrow) |
+| ESC       | &larr; (left arrow) |
 | SHIFT+Delete | Backspace |
 | CTRL+1..8 | F1..F8 |
 | CTRL+Clear | Home |
 | CTRL+Return | LineFeed |
-| Tab | Tab |
-| Clear | Clear |
-| Delete | Del |
-| Help | (pound sign) |
+| Insert    | Inst |
+| Clear     | Clr |
+| Delete    | Del |
+| Help      | &pound; |
 
 Cursor arrows work Atari style (CTRL+arrow key).
 
